@@ -1,0 +1,136 @@
+# Pipeline de OmniMarket Operations Hub.
+# - En cada Pull Request: revisa el código y corre las pruebas unitarias y E2E.
+# - En cada cambio a main: corre lo mismo y, SOLO si todo pasa, despliega a producción en Vercel.
+#   Si una prueba falla, el despliegue no se ejecuta.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Si llega un cambio nuevo a la misma rama, se cancela la ejecución anterior.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Lint, tipos y pruebas
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Base de datos PostgreSQL desechable solo para las pruebas (nunca toca la de producción).
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: omnimarket_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      CI: true
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/omnimarket_ci
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/omnimarket_ci
+      AUTH_TRUST_HOST: true
+      # Credenciales falsas: las pruebas nunca llegan a Google ni a GitHub.
+      AUTH_GOOGLE_ID: ci-google-id
+      AUTH_GOOGLE_SECRET: ci-google-secret
+      AUTH_GITHUB_ID: ci-github-id
+      AUTH_GITHUB_SECRET: ci-github-secret
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Generar AUTH_SECRET temporal
+        run: echo "AUTH_SECRET=$(openssl rand -base64 32)" >> "$GITHUB_ENV"
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Crear tablas en la base de pruebas
+        run: npx prisma migrate deploy
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Revisión de tipos
+        run: npm run typecheck
+
+      - name: Pruebas unitarias (Vitest)
+        run: npm test
+
+      - name: Compilar
+        run: npm run build
+
+      - name: Instalar navegador para Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Pruebas E2E (Playwright)
+        run: npm run test:e2e
+
+      - name: Guardar reporte de Playwright
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
+  deploy:
+    name: Desplegar a producción (Vercel)
+    # Solo corre si TODAS las pruebas pasaron y el cambio llegó a main.
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.url }}
+
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Aplicar migraciones a la base de producción
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+
+      - name: Descargar configuración de Vercel
+        run: npx vercel@65 pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Compilar para Vercel
+        run: npx vercel@65 build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Publicar
+        id: deploy
+        run: |
+          url=$(npx vercel@65 deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Publicado en: $url"
