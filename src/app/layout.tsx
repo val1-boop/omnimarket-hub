@@ -1,20 +1,28 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Dancing_Script, Geist, Montserrat } from "next/font/google";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
+// Geist: texto general · Montserrat: títulos · Dancing Script: frases decorativas.
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
   subsets: ["latin"],
+  weight: ["600", "700", "800"],
+});
+
+const dancingScript = Dancing_Script({
+  variable: "--font-dancing-script",
+  subsets: ["latin"],
+  weight: ["600"],
 });
 
 export const metadata: Metadata = {
-    title: "OmniMarket · De la caja a la puerta",
+  title: "OmniMarket · De la caja a la puerta",
   description: "Sigue tus ventas y tus pedidos de OmniMarket, desde que llegan hasta que se entregan.",
 };
 
@@ -25,7 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${geistSans.variable} ${geistMono.variable} font-sans`}>
+      <body className={`${geistSans.variable} ${montserrat.variable} ${dancingScript.variable} font-sans`}>
         <Providers>{children}</Providers>
       </body>
     </html>

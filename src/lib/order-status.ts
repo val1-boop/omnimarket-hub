@@ -1,13 +1,13 @@
 import type { OrderStatus } from "@prisma/client";
 
 // Orden de las columnas del Kanban y textos en español de cada estado.
-export const ORDER_STATUSES: OrderStatus[] = [
+export const ORDER_STATUSES = [
   "PENDING",
   "PROCESSING",
   "SHIPPED",
   "DELIVERED",
   "CANCELLED",
-];
+] as const satisfies readonly OrderStatus[];
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   PENDING: "Por preparar",

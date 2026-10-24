@@ -1,0 +1,46 @@
+import { buildOrderWhere, ORDERS_PAGE_SIZE, type OrderFilters } from "@/lib/filters";
+import { prisma } from "@/lib/prisma";
+
+export async function getOrdersPage(filters: OrderFilters) {
+  const where = buildOrderWhere(filters);
+
+  const [total, orders] = await Promise.all([
+    prisma.order.count({ where }),
+    prisma.order.findMany({
+      where,
+      orderBy: [{ createdAt: "desc" }, { number: "desc" }],
+      skip: (filters.page - 1) * ORDERS_PAGE_SIZE,
+      take: ORDERS_PAGE_SIZE,
+      select: {
+        id: true,
+        number: true,
+        status: true,
+        totalCents: true,
+        createdAt: true,
+        customer: { select: { name: true } },
+        _count: { select: { items: true } },
+      },
+    }),
+  ]);
+
+  return {
+    total,
+    pageCount: Math.max(1, Math.ceil(total / ORDERS_PAGE_SIZE)),
+    rows: orders.map((order) => ({
+      id: order.id,
+      number: order.number,
+      status: order.status,
+      totalCents: order.totalCents,
+      createdAt: order.createdAt,
+      customerName: order.customer.name,
+      itemCount: order._count.items,
+    })),
+  };
+}
+
+export type OrderRow = Awaited<ReturnType<typeof getOrdersPage>>["rows"][number];
+
+export async function getStatusCounts() {
+  const rows = await prisma.order.groupBy({ by: ["status"], _count: { _all: true } });
+  return new Map(rows.map((row) => [row.status, row._count._all]));
+}
