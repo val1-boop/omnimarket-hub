@@ -24,9 +24,23 @@
 ```bash
 curl "https://omnimarket-hub-brown.vercel.app/api/test/analytics?page=1&limit=50"
 ```
-- El tiempo que tarda el backend viene en el cuerpo (`meta.durationMs`) y en el encabezado **`Server-Timing`** (Chrome: *F12 → Network → la petición → Timing → Server Timing*).
-- Medido en producción (20 peticiones seguidas): **17–59 ms** de backend. Las funciones corren en `iad1` (Washington D.C.), la misma región que la base de datos.
-- **Tiempo total visto desde México:** 0.20–0.24 s reutilizando la conexión, como lo hacen el navegador y Postman después de la primera petición. La **primera** petición tarda más (0.5–1 s) porque abre la conexión cifrada con el servidor y, si la app llevaba rato sin uso, la despierta. Para medir varias veces con la misma conexión:
+**Criterio de medición:** el límite de **300 ms** se mide como el **tiempo que tarda el servidor** en calcular y devolver las métricas. La app lo reporta en cada respuesta de dos formas:
+- En el cuerpo: `meta.durationMs`.
+- En el encabezado **`Server-Timing: app;dur=…`**.
+  - **Chrome:** *F12 → Network → la petición → Timing → Server Timing*.
+  - **Postman:** pestaña *Headers* de la respuesta.
+
+El tiempo total que muestran Postman o `curl` suma además el viaje por internet entre tu computadora y el servidor. Ese viaje depende de dónde estés y de tu conexión, no de la app.
+
+| Medición en producción (24 oct 2026, 20 peticiones desde México) | Resultado |
+|---|---|
+| Tiempo del servidor (`meta.durationMs`) | **13.8–36 ms** |
+| Total reutilizando la conexión, como hacen el navegador y Postman | 0.21–0.33 s (la mayor parte es el viaje México ↔ Virginia) |
+| Total abriendo una conexión nueva en cada petición | 0.43–1.6 s (incluye abrir la conexión cifrada) |
+
+- Las funciones corren en `iad1` (Washington D.C.), la misma región que la base de datos.
+- Si la app pasa un rato sin uso, Vercel la "apaga" y la siguiente petición tarda más; se llegaron a medir ~300 ms de servidor. Para evitarlo, el flujo **Mantener activa la app** (`.github/workflows/mantener-activa.yml`) la visita cada 5 minutos.
+- Para medir varias veces con la misma conexión:
   ```bash
   u="https://omnimarket-hub-brown.vercel.app/api/test/analytics?page=1&limit=50"
   curl -s -o /dev/null -o /dev/null -o /dev/null -o /dev/null -o /dev/null -w "total %{time_total} s\n" "$u" "$u" "$u" "$u" "$u"
@@ -107,6 +121,7 @@ Antes de cada prueba se llama a `POST /api/test/reset-data`.
 ### Pipeline (`.github/workflows/ci.yml`)
 - **En cada Pull Request:** instalar → migraciones en una base PostgreSQL desechable → lint → revisión de tipos → pruebas unitarias → build → pruebas E2E. Si algo falla, GitHub no deja aceptar el Pull Request.
 - **En `main`:** lo mismo y, **solo si pasa**, migraciones en producción → `vercel build` → `vercel deploy --prebuilt --prod` → comprobación de que producción responde.
+- **Cada 5 minutos** (`.github/workflows/mantener-activa.yml`): visita producción para que no se "duerma" y deja anotado el tiempo de cada respuesta. Solo lee datos.
 
 ---
 
