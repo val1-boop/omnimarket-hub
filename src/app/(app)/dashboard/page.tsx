@@ -69,7 +69,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     <div className="space-y-10">
       {/* Portada */}
       <section className="grid overflow-hidden rounded-2xl bg-sand-50 md:grid-cols-2">
-        <div className="p-8 md:p-12">
+        <div className="min-w-0 p-8 md:p-12">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sand-700">
             {firstName ? `¡Hola, ${firstName}!` : "¡Hola!"}
           </p>
@@ -103,12 +103,20 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           <div className="mt-8 flex flex-wrap gap-3">
             {isEmpty ? (
               <>
-                <Link href={productCount === 0 ? "/productos/nuevo" : "/pedidos/nuevo"} className={buttonVariants()}>
+                <Link
+                  href={productCount === 0 ? "/productos/nuevo" : "/pedidos/nuevo"}
+                  className={cn(buttonVariants(), "h-auto min-h-11 whitespace-normal py-3 text-center")}
+                >
                   {productCount === 0 ? "Agregar mi primer producto" : "Registrar mi primer pedido"}
                   <ArrowRight aria-hidden="true" />
                 </Link>
                 {!store.isDemo && (
-                  <StoreSwitchButton to="demo" label="Explorar la tienda de demostración" />
+                  <StoreSwitchButton
+                    to="demo"
+                    label="Explorar la tienda de demostración"
+                    // En celular el texto no cabe en una línea: puede bajar a dos.
+                    className="h-auto min-h-11 whitespace-normal py-3 text-center"
+                  />
                 )}
               </>
             ) : (
@@ -126,7 +134,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </div>
 
         {/* Recorrido de los pedidos con números reales */}
-        <div className="bg-sand-100 p-8 md:p-12">
+        <div className="min-w-0 bg-sand-100 p-8 md:p-12">
           <h2 className="font-display text-sm font-bold uppercase tracking-wider text-navy-900">
             ¿Dónde van tus pedidos?
           </h2>
