@@ -1,0 +1,60 @@
+# Verifica la app publicada como lo haría el evaluador (scripts/verificar-produccion.mjs):
+# páginas, inicio de sesión con Google y GitHub, endpoints, latencia, sesión en las dos tiendas
+# con la consola abierta y un movimiento en el tablero. Al final deja la Tienda de demostración
+# como al principio y borra el usuario temporal que usó.
+# Corre sola después de cada publicación en main y a mano con "Run workflow".
+name: Verificar producción
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verificar-produccion
+  cancel-in-progress: false
+
+jobs:
+  verificar:
+    name: Verificar producción
+    # Después de una publicación, solo si la CI (pruebas + despliegue) terminó bien.
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PRODUCTION_URL: https://omnimarket-hub-brown.vercel.app
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Instalar navegador para Playwright
+        run: npx playwright install --with-deps chromium
+
+      # AUTH_SECRET de producción, para simular una sesión igual que en las pruebas E2E.
+      - name: Leer la configuración de producción
+        run: |
+          npx vercel@65 pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }} > /dev/null
+          secret=$(grep -E '^AUTH_SECRET=' .vercel/.env.production.local | head -1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//')
+          if [ -z "$secret" ]; then echo "::warning::No se pudo leer AUTH_SECRET de producción"; exit 0; fi
+          echo "::add-mask::$secret"
+          echo "AUTH_SECRET=$secret" >> "$GITHUB_ENV"
+
+      - name: Verificar la app publicada
+        run: node scripts/verificar-produccion.mjs
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
