@@ -1,0 +1,6 @@
+{
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+"prisma.pinToPrisma6": true,
+"js/ts.tsdk.path": "node_modules/typescript/lib"
+}
