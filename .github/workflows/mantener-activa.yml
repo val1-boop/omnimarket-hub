@@ -1,13 +1,15 @@
 # Mantiene "despierta" la app publicada.
 # Si nadie la usa por un rato, Vercel apaga la función y la siguiente petición tarda más
 # (arranque en frío: en producción se midieron ~300 ms solo de servidor contra ~15–35 ms normales).
-# Cada 5 minutos este flujo visita las rutas principales para que el evaluador no reciba ese arranque.
+# Cada 15 minutos este flujo visita las rutas principales para que el evaluador no reciba ese arranque.
+# GitHub no garantiza la hora exacta de las tareas programadas: a veces se retrasan o se saltan.
 # Solo lee: no cambia datos. Si producción no responde 200, la ejecución queda en rojo.
 name: Mantener activa la app
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    # Minutos 7, 22, 37 y 52 de cada hora (evita el minuto 0, cuando GitHub tiene más carga).
+    - cron: "7,22,37,52 * * * *"
   # Botón "Run workflow" en la pestaña Actions para correrlo a mano.
   workflow_dispatch:
 
