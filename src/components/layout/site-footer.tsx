@@ -26,7 +26,12 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-navy-800">
         <div className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-5 text-xs text-slate-400 md:flex-row md:justify-between md:px-8">
-          <p>© {new Date().getFullYear()} OmniMarket · Proyecto escolar.</p>
+          <p>
+            © {new Date().getFullYear()} OmniMarket · Proyecto escolar ·{" "}
+            <Link href="/privacidad" className="underline hover:text-white">
+              Aviso de privacidad
+            </Link>
+          </p>
           <p>Los productos, clientes y pedidos que ves son de prueba: sirven para enseñar cómo funciona la tienda.</p>
         </div>
       </div>

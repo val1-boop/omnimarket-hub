@@ -24,6 +24,8 @@ const dancingScript = Dancing_Script({
 export const metadata: Metadata = {
   title: "OmniMarket · De la caja a la puerta",
   description: "Sigue tus ventas y tus pedidos de OmniMarket, desde que llegan hasta que se entregan.",
+  // Solo si Google pide comprobar que el dominio es tuyo (Google Search Console).
+  verification: process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : undefined,
 };
 
 export default function RootLayout({

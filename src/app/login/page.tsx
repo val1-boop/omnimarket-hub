@@ -1,4 +1,5 @@
 import { ChartColumn, Layers, SquareKanban } from "lucide-react";
+import Link from "next/link";
 import { signIn } from "@/auth";
 import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
@@ -106,6 +107,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               </Button>
             </form>
           </div>
+
+          <p className="mt-8 text-xs text-slate-500">
+            Para entrar usamos tu nombre, correo y foto de Google o GitHub. Te explicamos todo en el{" "}
+            <Link href="/privacidad" className="underline hover:text-navy-900">
+              aviso de privacidad
+            </Link>
+            .
+          </p>
         </div>
       </section>
     </main>
