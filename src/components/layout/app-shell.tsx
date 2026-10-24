@@ -6,17 +6,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { Logo } from "@/components/brand/logo";
+import { NAV_ITEMS } from "@/components/layout/nav-items";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { signOutAction } from "@/server/actions/auth";
-
-const NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/pedidos", label: "Pedidos" },
-  { href: "/kanban", label: "Kanban" },
-  { href: "/productos", label: "Productos" },
-];
 
 type AppShellUser = {
   name?: string | null;
@@ -69,12 +63,13 @@ export function AppShell({ user, children }: { user: AppShellUser; children: Rea
           <div className="hidden items-center gap-3 md:flex">
             <UserAvatar user={user} />
             <div className="hidden max-w-40 lg:block">
-              <p className="truncate text-sm font-medium text-navy-900">{user.name ?? "Usuario"}</p>
+              <p className="truncate text-sm font-medium text-navy-900">{user.name ?? "Tu cuenta"}</p>
               <p className="truncate text-xs text-slate-500">{user.email}</p>
             </div>
             <form action={signOutAction}>
-              <Button type="submit" variant="ghost" size="icon" aria-label="Cerrar sesión" title="Cerrar sesión">
-                <LogOut />
+              <Button type="submit" variant="outline" size="sm">
+                <LogOut aria-hidden="true" />
+                Cerrar sesión
               </Button>
             </form>
           </div>
@@ -113,13 +108,13 @@ export function AppShell({ user, children }: { user: AppShellUser; children: Rea
             <div className="flex items-center gap-3 border-t border-slate-200 pt-4">
               <UserAvatar user={user} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-navy-900">{user.name ?? "Usuario"}</p>
+                <p className="truncate text-sm font-medium text-navy-900">{user.name ?? "Tu cuenta"}</p>
                 <p className="truncate text-xs text-slate-500">{user.email}</p>
               </div>
               <form action={signOutAction}>
                 <Button type="submit" variant="outline" size="sm">
                   <LogOut aria-hidden="true" />
-                  Salir
+                  Cerrar sesión
                 </Button>
               </form>
             </div>

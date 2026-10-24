@@ -4,11 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export default function KanbanPage() {
   return (
     <>
-      <PageHeader eyebrow="Operaciones" title="Kanban de pedidos" description="Arrastra los pedidos para cambiar su estado." />
+      <PageHeader
+        eyebrow="Tus envíos"
+        title="Tablero"
+        description="Cada columna es un paso del camino. Arrastra un pedido a la siguiente cuando avance."
+      />
       <Card>
         <CardHeader>
-          <CardTitle>Próximamente</CardTitle>
-          <CardDescription>El tablero con Drag &amp; Drop se construye en la Fase 6.</CardDescription>
+          <CardTitle>Estamos armando esta sección</CardTitle>
+          <CardDescription>Muy pronto vas a poder mover tus pedidos de una columna a otra.</CardDescription>
         </CardHeader>
         <CardContent />
       </Card>

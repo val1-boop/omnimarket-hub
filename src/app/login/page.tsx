@@ -1,5 +1,4 @@
-import { Gauge, Layers, ShieldCheck } from "lucide-react";
-import Link from "next/link";
+import { ChartColumn, Layers, SquareKanban } from "lucide-react";
 import { signIn } from "@/auth";
 import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
@@ -9,14 +8,13 @@ type LoginPageProps = {
 };
 
 const ERROR_MESSAGES: Record<string, string> = {
-  AccessDenied: "Acceso denegado. Intenta con otra cuenta.",
-  Configuration: "Error de configuración del servidor de autenticación.",
+  AccessDenied: "No pudimos dejarte entrar con esa cuenta. Prueba con otra.",
 };
 
 const HIGHLIGHTS = [
-  { icon: Gauge, text: "Métricas de ventas en tiempo real" },
-  { icon: Layers, text: "Kanban y edición de pedidos en lote" },
-  { icon: ShieldCheck, text: "Acceso seguro con OAuth 2.0" },
+  { icon: ChartColumn, text: "Ve cuánto vendes y cuánto te queda de ganancia" },
+  { icon: SquareKanban, text: "Mueve tus pedidos arrastrándolos de un paso al siguiente" },
+  { icon: Layers, text: "Cambia varios pedidos a la vez, sin ir uno por uno" },
 ];
 
 // Solo permitimos redirigir a rutas internas (evita redirecciones a sitios externos).
@@ -41,13 +39,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       <section className="hidden flex-col justify-between bg-navy-900 p-12 text-white lg:flex">
         <Logo href="/login" inverted />
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sand-200">Te damos la bienvenida</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sand-200">OmniMarket</p>
           <h1 className="mt-4 font-display text-5xl font-extrabold uppercase leading-tight">
-            Todo tu negocio.
+            Cada pedido,
             <br />
-            En un solo lugar.
+            de la caja
+            <br />a la puerta.
           </h1>
-          <p className="mt-3 font-script text-3xl text-sand-200">Decisiones con datos reales</p>
+          <p className="mt-3 font-script text-3xl text-sand-200">sin perderle la pista a ninguno</p>
           <ul className="mt-10 space-y-4">
             {HIGHLIGHTS.map(({ icon: Icon, text }) => (
               <li key={text} className="flex items-center gap-3 text-sm text-slate-200">
@@ -57,7 +56,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             ))}
           </ul>
         </div>
-        <p className="text-xs text-slate-400">© {new Date().getFullYear()} OmniMarket Operations Hub</p>
+        <p className="text-xs text-slate-400">© {new Date().getFullYear()} OmniMarket · Proyecto escolar</p>
       </section>
 
       {/* Formulario */}
@@ -66,13 +65,15 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <div className="mb-10 lg:hidden">
             <Logo href="/login" />
           </div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sand-700">Acceso</p>
-          <h2 className="mt-1 font-display text-3xl font-extrabold uppercase text-navy-900">Inicia sesión</h2>
-          <p className="mt-2 text-sm text-slate-600">Usa tu cuenta de Google o GitHub para entrar al Operations Hub.</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sand-700">¡Qué gusto verte!</p>
+          <h2 className="mt-1 font-display text-3xl font-extrabold uppercase text-navy-900">Entra a tu tienda</h2>
+          <p className="mt-2 text-sm text-slate-600">
+            Usa tu cuenta de Google o de GitHub. No necesitas crear una contraseña nueva.
+          </p>
 
           {error && (
             <p role="alert" className="mt-6 rounded-md bg-rose-50 p-3 text-sm text-rose-700">
-              {ERROR_MESSAGES[error] ?? "No se pudo iniciar sesión. Inténtalo de nuevo."}
+              {ERROR_MESSAGES[error] ?? "Algo salió mal al entrar. Inténtalo otra vez en un momento."}
             </p>
           )}
 
@@ -105,18 +106,6 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               </Button>
             </form>
           </div>
-
-          <p className="mt-8 text-xs text-slate-500">
-            Al continuar aceptas los{" "}
-            <Link href="/terminos" className="underline hover:text-navy-900">
-              términos y condiciones
-            </Link>{" "}
-            y la{" "}
-            <Link href="/privacidad" className="underline hover:text-navy-900">
-              política de privacidad
-            </Link>
-            .
-          </p>
         </div>
       </section>
     </main>

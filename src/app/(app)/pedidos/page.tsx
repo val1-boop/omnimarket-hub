@@ -4,11 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export default function PedidosPage() {
   return (
     <>
-      <PageHeader eyebrow="Operaciones" title="Pedidos" description="Consulta, crea y actualiza pedidos en lote." />
+      <PageHeader
+        eyebrow="Tus ventas"
+        title="Pedidos"
+        description="Todos tus pedidos en una lista. Podrás crear nuevos y cambiar varios a la vez."
+      />
       <Card>
         <CardHeader>
-          <CardTitle>Próximamente</CardTitle>
-          <CardDescription>La tabla de pedidos y la edición en lote se construyen en la Fase 5.</CardDescription>
+          <CardTitle>Estamos armando esta sección</CardTitle>
+          <CardDescription>Muy pronto vas a ver aquí la lista completa de tus pedidos.</CardDescription>
         </CardHeader>
         <CardContent />
       </Card>

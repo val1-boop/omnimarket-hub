@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OmniMarket — Operations Hub",
-  description: "Dashboard de analítica e-commerce en tiempo real",
+    title: "OmniMarket · De la caja a la puerta",
+  description: "Sigue tus ventas y tus pedidos de OmniMarket, desde que llegan hasta que se entregan.",
 };
 
 export default function RootLayout({

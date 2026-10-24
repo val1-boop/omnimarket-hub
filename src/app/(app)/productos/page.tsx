@@ -13,10 +13,14 @@ export default async function ProductosPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Catálogo" title="Productos" description="Catálogo de productos, precios y márgenes." />
+      <PageHeader
+        eyebrow="Tu catálogo"
+        title="Productos"
+        description="Lo que vendes, a cuánto lo vendes y cuánto te deja cada uno."
+      />
 
       <section>
-        <SectionTitle title="Explora por categoría" />
+        <SectionTitle title="Por categoría" />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           {categories.map(({ category, _count }) => {
             const Icon = getCategoryIcon(category);
@@ -36,7 +40,9 @@ export default async function ProductosPage() {
         </div>
       </section>
 
-      <p className="mt-10 text-sm text-slate-500">El catálogo completo y el registro de productos se construyen en la Fase 5.</p>
+      <p className="mt-10 text-sm text-slate-500">
+        Muy pronto vas a poder ver aquí cada producto y dar de alta nuevos.
+      </p>
     </>
   );
 }

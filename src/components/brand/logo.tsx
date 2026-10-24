@@ -18,11 +18,11 @@ export function Logo({ href = "/dashboard", inverted = false }: { href?: string;
         </span>
         <span
           className={cn(
-            "mt-1 text-[10px] font-medium uppercase tracking-[0.3em]",
+            "mt-1 text-[10px] font-medium uppercase tracking-[0.2em]",
             inverted ? "text-slate-300" : "text-slate-500",
           )}
         >
-          Operations Hub
+          De la caja a la puerta
         </span>
       </span>
     </Link>

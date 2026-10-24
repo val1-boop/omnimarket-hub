@@ -10,9 +10,9 @@ export const ORDER_STATUSES: OrderStatus[] = [
 ];
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  PENDING: "Pendiente",
-  PROCESSING: "En preparación",
-  SHIPPED: "Enviado",
+  PENDING: "Por preparar",
+  PROCESSING: "Preparándose",
+  SHIPPED: "En camino",
   DELIVERED: "Entregado",
   CANCELLED: "Cancelado",
 };
