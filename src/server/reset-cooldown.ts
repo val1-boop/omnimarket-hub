@@ -19,3 +19,11 @@ export async function claimResetSlot(prisma: PrismaClient, cooldownSeconds: numb
   const retryAfterSeconds = getRetryAfterSeconds(last?.lastResetAt ?? null, new Date(), cooldownSeconds);
   return { ok: false, retryAfterSeconds: Math.max(1, retryAfterSeconds) };
 }
+
+/**
+ * Libera el turno cuando el reinicio falló. Como el reinicio es una sola transacción,
+ * si falla no se cambió nada y se puede volver a intentar de inmediato, sin esperar.
+ */
+export async function releaseResetSlot(prisma: PrismaClient) {
+  await prisma.$executeRaw`UPDATE "DataReset" SET "lastResetAt" = to_timestamp(0) AT TIME ZONE 'UTC' WHERE "id" = 1`;
+}

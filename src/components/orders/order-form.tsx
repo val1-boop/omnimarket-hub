@@ -83,6 +83,7 @@ export function OrderForm({ customers, products }: OrderFormProps) {
                   <Select
                     aria-label={`Producto ${index + 1}`}
                     aria-invalid={Boolean(errors.items?.[index]?.productId)}
+                    defaultValue={field.productId}
                     {...register(`items.${index}.productId`)}
                   >
                     <option value="">Elige un producto…</option>
@@ -105,6 +106,7 @@ export function OrderForm({ customers, products }: OrderFormProps) {
                     max={99}
                     aria-label={`Cantidad del producto ${index + 1}`}
                     aria-invalid={Boolean(errors.items?.[index]?.quantity)}
+                    defaultValue={field.quantity}
                     {...register(`items.${index}.quantity`, { valueAsNumber: true })}
                   />
                   {errors.items?.[index]?.quantity && (
