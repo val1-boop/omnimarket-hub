@@ -64,7 +64,7 @@ El tiempo total que muestran Postman o `curl` suma además el viaje por internet
    El endpoint es público, por eso **solo consulta la Tienda de demostración**: los pedidos de tu tienda privada responden 404, para no exponerlos.
 
 ### 4. Pipeline de integración continua
-En [Actions](https://github.com/val1-boop/omnimarket-hub/actions) cada commit de `main` muestra los dos trabajos en verde: **Lint, tipos y pruebas** → **Desplegar a producción (Vercel)**.
+En [Actions](https://github.com/val1-boop/omnimarket-hub/actions) cada commit de `main` muestra los dos trabajos en verde: **Lint, tipos y pruebas** → **Desplegar a producción (Vercel)**. Después corre **Verificar producción**, que revisa la app ya publicada; su resumen está en la página de la ejecución.
 
 ---
 
@@ -136,6 +136,13 @@ Las pruebas que usan datos de ejemplo llaman antes a `POST /api/test/reset-data`
 ### Pipeline (`.github/workflows/ci.yml`)
 - **En cada Pull Request:** instalar → migraciones en una base PostgreSQL desechable → lint → revisión de tipos → pruebas unitarias → build → pruebas E2E. Si algo falla, GitHub no deja aceptar el Pull Request.
 - **En `main`:** lo mismo y, **solo si pasa**, migraciones en producción → `vercel build` → `vercel deploy --prebuilt --prod` → comprobación de que producción responde.
+- **Después de cada publicación** (`.github/workflows/verificar-produccion.yml`, también a mano con *Run workflow*): revisa la app publicada con `scripts/verificar-produccion.mjs`. Comprueba:
+  - páginas y rutas protegidas;
+  - que Google y GitHub abran con la dirección de regreso correcta;
+  - endpoints y latencia;
+  - una sesión en una cuenta nueva y en la Tienda de demostración, con la consola abierta;
+  - un movimiento en el tablero.
+  Al terminar restablece la Tienda de demostración y borra el usuario temporal que usó. El resumen aparece en la página de cada ejecución en Actions.
 - **Cada 15 minutos** (`.github/workflows/mantener-activa.yml`): visita producción para que no se "duerma" y deja anotado el tiempo de cada respuesta. Solo lee datos.
 
 ---
