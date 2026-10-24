@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Field } from "@/components/ui/field";
 import { Input, Select } from "@/components/ui/input";
+import { SavingSkeleton } from "@/components/ui/skeleton";
 import { calculateMargin, pesosToCents } from "@/lib/finance";
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { runAction } from "@/lib/run-action";
@@ -67,7 +68,12 @@ export function ProductForm({ product }: ProductFormProps) {
   const busy = save.isPending || remove.isPending;
 
   return (
-    <form onSubmit={handleSubmit((values) => save.mutate(values))} noValidate className="grid gap-6 lg:grid-cols-3">
+    <form
+      onSubmit={handleSubmit((values) => save.mutate(values))}
+      noValidate
+      aria-busy={busy || undefined}
+      className="grid gap-6 lg:grid-cols-3"
+    >
       <Card className="lg:col-span-2">
         <CardContent className="grid gap-5 sm:grid-cols-2">
           <div className="sm:col-span-2">
@@ -113,15 +119,21 @@ export function ProductForm({ product }: ProductFormProps) {
             </span>
           </div>
           <Button type="submit" className="w-full" disabled={busy}>
-            {save.isPending ? "Guardando…" : product ? "Guardar cambios" : "Agregar producto"}
+            {save.isPending ? <SavingSkeleton className="w-28 bg-white/40" /> : product ? "Guardar cambios" : "Agregar producto"}
           </Button>
           <Link href="/productos" className={buttonVariants({ variant: "ghost", className: "w-full" })}>
             Cancelar
           </Link>
           {product && (
             <Button variant="ghost" className="w-full text-rose-600 hover:bg-rose-50" disabled={busy} onClick={() => setConfirmOpen(true)}>
-              <Trash2 aria-hidden="true" />
-              Borrar producto
+              {remove.isPending ? (
+                <SavingSkeleton className="w-28 bg-rose-200" label="Borrando…" />
+              ) : (
+                <>
+                  <Trash2 aria-hidden="true" />
+                  Borrar producto
+                </>
+              )}
             </Button>
           )}
         </CardContent>

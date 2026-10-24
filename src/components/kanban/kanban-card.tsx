@@ -3,6 +3,7 @@
 import { useDraggable } from "@dnd-kit/core";
 import type { OrderStatus } from "@prisma/client";
 import { ArrowRight } from "lucide-react";
+import { SavingSkeleton } from "@/components/ui/skeleton";
 import type { KanbanCard as KanbanCardData } from "@/lib/kanban";
 import { formatCurrency, formatDate, formatNumber, formatOrderNumber } from "@/lib/format";
 import { ORDER_STATUS_LABELS } from "@/lib/order-status";
@@ -11,12 +12,14 @@ import { cn } from "@/lib/utils";
 type CardViewProps = {
   card: KanbanCardData;
   nextStatus: OrderStatus | null;
+  /** true mientras se guarda el movimiento: en lugar del botón se ve un esqueleto. */
+  saving?: boolean;
   onAdvance?: () => void;
   className?: string;
 };
 
 // Lo que se ve dentro de la tarjeta (se usa también mientras se arrastra).
-export function KanbanCardView({ card, nextStatus, onAdvance, className }: CardViewProps) {
+export function KanbanCardView({ card, nextStatus, saving = false, onAdvance, className }: CardViewProps) {
   return (
     <div className={cn("rounded-xl border border-slate-200 bg-white p-3 shadow-sm", className)}>
       <div className="flex items-center justify-between gap-2">
@@ -30,7 +33,11 @@ export function KanbanCardView({ card, nextStatus, onAdvance, className }: CardV
           {card.itemCount === 1 ? "1 producto" : `${formatNumber(card.itemCount)} productos`}
         </span>
       </div>
-      {nextStatus && (
+      {saving ? (
+        <div className="mt-3 flex h-[30px] items-center justify-center rounded-md bg-slate-100">
+          <SavingSkeleton className="w-24" />
+        </div>
+      ) : nextStatus && (
         <button
           type="button"
           onClick={onAdvance}
@@ -47,10 +54,11 @@ export function KanbanCardView({ card, nextStatus, onAdvance, className }: CardV
 type DraggableCardProps = {
   card: KanbanCardData;
   nextStatus: OrderStatus | null;
+  saving: boolean;
   onAdvance: () => void;
 };
 
-export function DraggableCard({ card, nextStatus, onAdvance }: DraggableCardProps) {
+export function DraggableCard({ card, nextStatus, saving, onAdvance }: DraggableCardProps) {
   const { setNodeRef, listeners, isDragging } = useDraggable({ id: card.id });
 
   return (
@@ -58,9 +66,10 @@ export function DraggableCard({ card, nextStatus, onAdvance }: DraggableCardProp
       ref={setNodeRef}
       {...listeners}
       data-testid={`kanban-card-${formatOrderNumber(card.number)}`}
+      aria-busy={saving || undefined}
       className={cn("cursor-grab touch-manipulation active:cursor-grabbing", isDragging && "opacity-30")}
     >
-      <KanbanCardView card={card} nextStatus={nextStatus} onAdvance={onAdvance} />
+      <KanbanCardView card={card} nextStatus={nextStatus} saving={saving} onAdvance={onAdvance} />
     </article>
   );
 }

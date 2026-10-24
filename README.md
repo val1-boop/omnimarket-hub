@@ -9,7 +9,7 @@
 | **Inicio de sesión** | Google o GitHub (OAuth 2.0; no hay usuario/contraseña) |
 | **Aviso de privacidad** | https://omnimarket-hub-brown.vercel.app/privacidad |
 
-> Los productos, clientes y pedidos son **datos de prueba**. Se pueden restablecer en cualquier momento con `POST /api/test/reset-data`.
+> Los productos, clientes y pedidos son **datos de prueba**. Se pueden restablecer con `POST /api/test/reset-data` (en producción hay que esperar 15 s entre un reinicio y otro).
 
 ---
 
@@ -25,7 +25,12 @@
 curl "https://omnimarket-hub-brown.vercel.app/api/test/analytics?page=1&limit=50"
 ```
 - El tiempo que tarda el backend viene en el cuerpo (`meta.durationMs`) y en el encabezado **`Server-Timing`** (Chrome: *F12 → Network → la petición → Timing → Server Timing*).
-- Medido en producción: **15–33 ms** de backend. Las funciones corren en `iad1` (Washington D.C.), la misma región que la base de datos.
+- Medido en producción (20 peticiones seguidas): **17–59 ms** de backend. Las funciones corren en `iad1` (Washington D.C.), la misma región que la base de datos.
+- **Tiempo total visto desde México:** 0.20–0.24 s reutilizando la conexión, como lo hacen el navegador y Postman después de la primera petición. La **primera** petición tarda más (0.5–1 s) porque abre la conexión cifrada con el servidor y, si la app llevaba rato sin uso, la despierta. Para medir varias veces con la misma conexión:
+  ```bash
+  u="https://omnimarket-hub-brown.vercel.app/api/test/analytics?page=1&limit=50"
+  curl -s -o /dev/null -o /dev/null -o /dev/null -o /dev/null -o /dev/null -w "total %{time_total} s\n" "$u" "$u" "$u" "$u" "$u"
+  ```
 
 ### 3. Drag & Drop con persistencia
 1. Entra a **Tablero** (`/kanban`) y arrastra una tarjeta a otra columna (o usa su botón *“Pasar a…”*).
@@ -47,10 +52,15 @@ Son públicos (no requieren sesión) y responden JSON.
 | Método y ruta | Parámetros | Qué hace |
 |---|---|---|
 | `GET /api/test/analytics` | `page` (≥ 1, por defecto 1), `limit` (1–100, por defecto 50) | `summary` (ventas, ganancia, margen, ticket promedio, pedidos por estado), `data` (página de pedidos con su ganancia y margen), `pagination` y `meta.durationMs` |
-| `POST /api/test/reset-data` | — | Regresa productos, clientes y pedidos al conjunto de prueba conocido (24 productos, 40 clientes, 300 pedidos, 611 líneas). No toca usuarios ni sesiones |
+| `POST /api/test/reset-data` | — | Regresa productos, clientes y pedidos al conjunto de prueba conocido (24 productos, 40 clientes, 300 pedidos, 611 líneas). **No toca usuarios, cuentas ni sesiones** |
 | `GET /api/test/kanban-status` | `order` (ej. `OM-00042`) o `id` | Estado y columna de un pedido. Sin parámetros: total por columna y los últimos 5 pedidos movidos |
 
-Parámetros inválidos responden **400** con el motivo; un pedido inexistente responde **404**.
+Parámetros inválidos responden **400** con el motivo; un pedido inexistente responde **404**; un método distinto (por ejemplo `GET` a `reset-data`) responde **405**.
+
+**Protecciones de `reset-data`** (para que no se pueda usar de forma indebida):
+- Solo borra y vuelve a cargar los datos de prueba de la tienda; los usuarios y sus sesiones no se tocan.
+- En producción hay que esperar **15 s** entre reinicios: antes de eso responde **429** con el encabezado `Retry-After`. Si llegan dos al mismo tiempo, solo uno se ejecuta.
+- Si la petición viene de otra página web (por ejemplo un formulario oculto en un sitio ajeno) responde **403**. curl, Postman y PowerShell funcionan normal.
 
 ```bash
 curl -X POST https://omnimarket-hub-brown.vercel.app/api/test/reset-data
@@ -66,34 +76,36 @@ curl "https://omnimarket-hub-brown.vercel.app/api/test/kanban-status"
 | **1. Arquitectura & Next.js 14+ (25 %)** | Next.js 15 con App Router, TypeScript estricto y Tailwind CSS 4. Server Components para leer datos y Server Actions validadas con Zod para escribir. Sin errores de consola |
 | **2. Endpoints de auditoría (25 %)** | `src/app/api/test/*`. Consultas en paralelo con índices en PostgreSQL; región `iad1` junto a la base de datos |
 | **3. Drag & Drop y CRUD avanzado (20 %)** | Kanban con `@dnd-kit` y mutación optimista (TanStack Query) con reversión y Toast. **Edición en lote**: en *Pedidos*, marcar varias casillas → *Pasar a…* o *Borrar*. CRUD de productos (crear, editar, borrar) y creación de pedidos |
-| **4. Pruebas y CI/CD (15 %)** | 28 pruebas unitarias (Vitest) + 3 flujos E2E (Playwright). `.github/workflows/ci.yml` bloquea el despliegue si algo falla |
+| **4. Pruebas y CI/CD (15 %)** | 32 pruebas unitarias (Vitest) + 10 pruebas E2E (Playwright) que cubren los 3 flujos. `.github/workflows/ci.yml` bloquea el despliegue si algo falla, y la rama `main` está protegida: un Pull Request no se puede aceptar si las pruebas fallan |
 | **5. Despliegue (15 %)** | Vercel con SSL. Solo la CI publica (`vercel.json` desactiva los despliegues automáticos) y después comprueba que producción responda |
-| **UI/UX** | Skeletons en cada carga (`loading.tsx` y `Suspense`), sin spinners. Toasts (Sonner) en cada cambio del tablero y edición en lote. Diseño adaptable a celular |
+| **UI/UX** | Skeletons en cada carga (`loading.tsx` y `Suspense`) y mientras se guarda un cambio (tabla, tablero y formularios), sin spinners. Toasts (Sonner) en cada cambio del tablero y edición en lote. Diseño adaptable a celular |
 
 ---
 
 ## Pruebas
 
-### Unitarias — Vitest (`tests/unit`, 28 pruebas)
+### Unitarias — Vitest (`tests/unit`, 32 pruebas)
 | Archivo | Cubre |
 |---|---|
-| `finance.test.ts` | Margen, ganancia, totales del pedido, **ticket promedio**, pesos ↔ centavos |
+| `finance.test.ts` | Margen, ganancia, totales del pedido, **ticket promedio** (la misma fórmula que usan el panel y la API), pesos ↔ centavos |
 | `format.test.ts` | **Formato de moneda** MXN, cantidades abreviadas, números, porcentajes, fechas en horario de CDMX |
 | `validation.test.ts` | **Esquemas Zod**: producto, pedido, edición en lote, movimiento en el tablero, parámetros de la API |
 | `filters.test.ts` | **Lógica de filtrado**: filtros de la dirección, número de pedido, búsqueda de pedidos y productos |
 | `kanban-analytics.test.ts` | Mover tarjetas, siguiente paso, rangos de fechas, días sin ventas, comparación entre periodos |
+| `reset-guard.test.ts` | Protecciones de `reset-data`: espera entre reinicios y bloqueo de otras páginas web |
 
-### E2E — Playwright (`tests/e2e`)
+### E2E — Playwright (`tests/e2e`, 10 pruebas)
 | Flujo | Archivo | Comprueba |
 |---|---|---|
 | 1. Autenticación | `auth.spec.ts` | Rutas privadas redirigen al login; OAuth de Google y GitHub con la dirección de regreso correcta; **sesión simulada** (cookie JWT firmada con `AUTH_SECRET`) y cierre de sesión; aviso de privacidad público |
 | 2. Creación | `creation.spec.ts` | Nuevo pedido aparece primero en la tabla; nuevo producto aparece en el catálogo |
-| 3. Drag & Drop | `kanban.spec.ts` | La tarjeta cambia de columna, `/api/test/kanban-status` lo confirma y sigue ahí al recargar |
+| 3. Drag & Drop | `kanban.spec.ts` | La tarjeta cambia de columna, `/api/test/kanban-status` lo confirma y sigue ahí al recargar; mientras se guarda muestra un esqueleto |
+| Endpoints | `api.spec.ts` | `reset-data` rechaza otras páginas web y `GET` sin cambiar nada; el ticket promedio del resumen cuadra con los pedidos, calculado pedido por pedido |
 
 Antes de cada prueba se llama a `POST /api/test/reset-data`.
 
 ### Pipeline (`.github/workflows/ci.yml`)
-- **En cada Pull Request:** instalar → migraciones en una base PostgreSQL desechable → lint → revisión de tipos → pruebas unitarias → build → pruebas E2E.
+- **En cada Pull Request:** instalar → migraciones en una base PostgreSQL desechable → lint → revisión de tipos → pruebas unitarias → build → pruebas E2E. Si algo falla, GitHub no deja aceptar el Pull Request.
 - **En `main`:** lo mismo y, **solo si pasa**, migraciones en producción → `vercel build` → `vercel deploy --prebuilt --prod` → comprobación de que producción responde.
 
 ---
@@ -120,7 +132,7 @@ npm run dev                 # http://localhost:3000
 | `npm run db:seed` | Restablecer los datos de prueba |
 | `npm run db:studio` | Ver la base de datos en el navegador |
 
-Variables de entorno: ver `.env.example` (`DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`, `AUTH_GOOGLE_ID/SECRET`, `AUTH_GITHUB_ID/SECRET`).
+Variables de entorno: ver `.env.example` (`DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`, `AUTH_GOOGLE_ID/SECRET`, `AUTH_GITHUB_ID/SECRET` y, opcional, `RESET_COOLDOWN_SECONDS`).
 
 ---
 

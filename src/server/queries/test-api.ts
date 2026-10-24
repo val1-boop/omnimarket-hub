@@ -1,4 +1,4 @@
-import { calculateMargin } from "@/lib/finance";
+import { averageTicketFromTotals, calculateMargin } from "@/lib/finance";
 import { formatCurrency, formatOrderNumber } from "@/lib/format";
 import { ORDER_STATUS_LABELS, ORDER_STATUSES } from "@/lib/order-status";
 import { prisma } from "@/lib/prisma";
@@ -32,7 +32,7 @@ export async function getAnalyticsPage({ page, limit }: { page: number; limit: n
   const revenue = totals._sum.totalCents ?? 0;
   const cost = totals._sum.costCents ?? 0;
   const soldOrders = totals._count._all;
-  const averageTicket = soldOrders > 0 ? Math.round(revenue / soldOrders) : 0;
+  const averageTicket = averageTicketFromTotals(revenue, soldOrders);
   const counts = new Map(statusCounts.map((row) => [row.status, row._count._all]));
   const totalPages = Math.max(1, Math.ceil(totalOrders / limit));
 

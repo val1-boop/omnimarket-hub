@@ -29,6 +29,15 @@ export function KanbanBoard({ initialBoard }: { initialBoard: KanbanColumnData[]
   const router = useRouter();
   const [board, setBoard] = useState(initialBoard);
   const [activeId, setActiveId] = useState<string | null>(null);
+  // Tarjetas cuyo movimiento todavía se está guardando (muestran un esqueleto).
+  const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
+  const markSaving = (id: string, saving: boolean) =>
+    setSavingIds((current) => {
+      const next = new Set(current);
+      if (saving) next.add(id);
+      else next.delete(id);
+      return next;
+    });
 
   // Cuando llegan datos nuevos del servidor, el tablero se actualiza con ellos.
   const [previousInitial, setPreviousInitial] = useState(initialBoard);
@@ -51,8 +60,10 @@ export function KanbanBoard({ initialBoard }: { initialBoard: KanbanColumnData[]
     onMutate: ({ id, status }) => {
       const previous = board;
       setBoard((current) => moveCard(current, id, status));
+      markSaving(id, true);
       return { previous };
     },
+    onSettled: (_data, _error, { id }) => markSaving(id, false),
     // Si falla, la tarjeta regresa a su columna.
     onError: (error, { number }, context) => {
       if (context) setBoard(context.previous);
@@ -99,6 +110,7 @@ export function KanbanBoard({ initialBoard }: { initialBoard: KanbanColumnData[]
                   key={card.id}
                   card={card}
                   nextStatus={nextStatus}
+                  saving={savingIds.has(card.id)}
                   onAdvance={() => nextStatus && requestMove(card.id, nextStatus)}
                 />
               );
