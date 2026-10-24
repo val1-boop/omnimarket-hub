@@ -74,6 +74,7 @@ Parámetros inválidos responden **400** con el motivo; un pedido inexistente re
 **Protecciones de `reset-data`** (para que no se pueda usar de forma indebida):
 - Solo borra y vuelve a cargar los datos de prueba de la tienda; los usuarios y sus sesiones no se tocan.
 - En producción hay que esperar **15 s** entre reinicios: antes de eso responde **429** con el encabezado `Retry-After`. Si llegan dos al mismo tiempo, solo uno se ejecuta.
+- Si un reinicio falla, responde **500** sin cambiar nada (todo pasa en una sola transacción) y se puede volver a intentar de inmediato, sin esperar los 15 s.
 - Si la petición viene de otra página web (por ejemplo un formulario oculto en un sitio ajeno) responde **403**. curl, Postman y PowerShell funcionan normal.
 
 ```bash
@@ -90,7 +91,7 @@ curl "https://omnimarket-hub-brown.vercel.app/api/test/kanban-status"
 | **1. Arquitectura & Next.js 14+ (25 %)** | Next.js 15 con App Router, TypeScript estricto y Tailwind CSS 4. Server Components para leer datos y Server Actions validadas con Zod para escribir. Sin errores de consola |
 | **2. Endpoints de auditoría (25 %)** | `src/app/api/test/*`. Consultas en paralelo con índices en PostgreSQL; región `iad1` junto a la base de datos |
 | **3. Drag & Drop y CRUD avanzado (20 %)** | Kanban con `@dnd-kit` y mutación optimista (TanStack Query) con reversión y Toast. **Edición en lote**: en *Pedidos*, marcar varias casillas → *Pasar a…* o *Borrar*. CRUD de productos (crear, editar, borrar) y creación de pedidos |
-| **4. Pruebas y CI/CD (15 %)** | 32 pruebas unitarias (Vitest) + 10 pruebas E2E (Playwright) que cubren los 3 flujos. `.github/workflows/ci.yml` bloquea el despliegue si algo falla, y la rama `main` está protegida: un Pull Request no se puede aceptar si las pruebas fallan |
+| **4. Pruebas y CI/CD (15 %)** | 35 pruebas unitarias (Vitest) + 14 pruebas E2E (Playwright) que cubren los 3 flujos. `.github/workflows/ci.yml` bloquea el despliegue si algo falla, y la rama `main` está protegida: un Pull Request no se puede aceptar si las pruebas fallan |
 | **5. Despliegue (15 %)** | Vercel con SSL. Solo la CI publica (`vercel.json` desactiva los despliegues automáticos) y después comprueba que producción responda |
 | **UI/UX** | Skeletons en cada carga (`loading.tsx` y `Suspense`) y mientras se guarda un cambio (tabla, tablero y formularios), sin spinners. Toasts (Sonner) en cada cambio del tablero y edición en lote. Diseño adaptable a celular |
 
@@ -98,7 +99,7 @@ curl "https://omnimarket-hub-brown.vercel.app/api/test/kanban-status"
 
 ## Pruebas
 
-### Unitarias — Vitest (`tests/unit`, 32 pruebas)
+### Unitarias — Vitest (`tests/unit`, 35 pruebas)
 | Archivo | Cubre |
 |---|---|
 | `finance.test.ts` | Margen, ganancia, totales del pedido, **ticket promedio** (la misma fórmula que usan el panel y la API), pesos ↔ centavos |
@@ -107,14 +108,16 @@ curl "https://omnimarket-hub-brown.vercel.app/api/test/kanban-status"
 | `filters.test.ts` | **Lógica de filtrado**: filtros de la dirección, número de pedido, búsqueda de pedidos y productos |
 | `kanban-analytics.test.ts` | Mover tarjetas, siguiente paso, rangos de fechas, días sin ventas, comparación entre periodos |
 | `reset-guard.test.ts` | Protecciones de `reset-data`: espera entre reinicios y bloqueo de otras páginas web |
+| `reset-data-route.test.ts` | Respuestas de `reset-data`: 200, 429 y, si el reinicio falla, 500 liberando la espera |
 
-### E2E — Playwright (`tests/e2e`, 10 pruebas)
+### E2E — Playwright (`tests/e2e`, 14 pruebas)
 | Flujo | Archivo | Comprueba |
 |---|---|---|
 | 1. Autenticación | `auth.spec.ts` | Rutas privadas redirigen al login; OAuth de Google y GitHub con la dirección de regreso correcta; **sesión simulada** (cookie JWT firmada con `AUTH_SECRET`) y cierre de sesión; aviso de privacidad público |
 | 2. Creación | `creation.spec.ts` | Nuevo pedido aparece primero en la tabla; nuevo producto aparece en el catálogo |
 | 3. Drag & Drop | `kanban.spec.ts` | La tarjeta cambia de columna, `/api/test/kanban-status` lo confirma y sigue ahí al recargar; mientras se guarda muestra un esqueleto |
 | Endpoints | `api.spec.ts` | `reset-data` rechaza otras páginas web y `GET` sin cambiar nada; el ticket promedio del resumen cuadra con los pedidos, calculado pedido por pedido |
+| Experiencia | `ux.spec.ts` | Páginas "no encontrado" en español con flecha para regresar (y 404 en direcciones inexistentes); el formulario de edición llega lleno desde el servidor; todos los campos de la tabla de pedidos tienen `id` o `name` |
 
 Antes de cada prueba se llama a `POST /api/test/reset-data`.
 

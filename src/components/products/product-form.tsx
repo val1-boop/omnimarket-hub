@@ -28,6 +28,9 @@ type ProductFormProps = {
 export function ProductForm({ product }: ProductFormProps) {
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  // Los valores iniciales también van en cada campo (defaultValue) para que la página
+  // llegue ya llena desde el servidor, sin verse vacía un instante mientras carga.
+  const defaults = product ?? { name: "", category: undefined, price: undefined, cost: undefined, stock: 0 };
   const {
     control,
     register,
@@ -35,7 +38,7 @@ export function ProductForm({ product }: ProductFormProps) {
     formState: { errors },
   } = useForm<ProductInput>({
     resolver: zodResolver(productSchema),
-    defaultValues: product ?? { name: "", category: undefined, price: undefined, cost: undefined, stock: 0 },
+    defaultValues: defaults,
   });
 
   // Vista previa de cuánto le ganas, mientras escribes.
@@ -78,11 +81,11 @@ export function ProductForm({ product }: ProductFormProps) {
         <CardContent className="grid gap-5 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <Field label="Nombre del producto" htmlFor="name" error={errors.name?.message}>
-              <Input id="name" placeholder="Ej. Termo de acero 750 ml" aria-invalid={Boolean(errors.name)} {...register("name")} />
+              <Input id="name" placeholder="Ej. Termo de acero 750 ml" aria-invalid={Boolean(errors.name)} defaultValue={defaults.name} {...register("name")} />
             </Field>
           </div>
           <Field label="Categoría" htmlFor="category" error={errors.category?.message}>
-            <Select id="category" aria-invalid={Boolean(errors.category)} {...register("category")}>
+            <Select id="category" aria-invalid={Boolean(errors.category)} defaultValue={defaults.category} {...register("category")}>
               <option value="">Elige una…</option>
               {PRODUCT_CATEGORIES.map((category) => (
                 <option key={category} value={category}>
@@ -92,13 +95,13 @@ export function ProductForm({ product }: ProductFormProps) {
             </Select>
           </Field>
           <Field label="Piezas en inventario" htmlFor="stock" error={errors.stock?.message}>
-            <Input id="stock" type="number" min={0} step={1} aria-invalid={Boolean(errors.stock)} {...register("stock", { valueAsNumber: true })} />
+            <Input id="stock" type="number" min={0} step={1} aria-invalid={Boolean(errors.stock)} defaultValue={defaults.stock} {...register("stock", { valueAsNumber: true })} />
           </Field>
           <Field label="Precio de venta (MXN)" htmlFor="price" error={errors.price?.message} hint="Lo que paga tu cliente">
-            <Input id="price" type="number" min={0} step="0.01" placeholder="0.00" aria-invalid={Boolean(errors.price)} {...register("price", { valueAsNumber: true })} />
+            <Input id="price" type="number" min={0} step="0.01" placeholder="0.00" aria-invalid={Boolean(errors.price)} defaultValue={defaults.price} {...register("price", { valueAsNumber: true })} />
           </Field>
           <Field label="Lo que te cuesta (MXN)" htmlFor="cost" error={errors.cost?.message} hint="Lo que pagas tú por él">
-            <Input id="cost" type="number" min={0} step="0.01" placeholder="0.00" aria-invalid={Boolean(errors.cost)} {...register("cost", { valueAsNumber: true })} />
+            <Input id="cost" type="number" min={0} step="0.01" placeholder="0.00" aria-invalid={Boolean(errors.cost)} defaultValue={defaults.cost} {...register("cost", { valueAsNumber: true })} />
           </Field>
         </CardContent>
       </Card>

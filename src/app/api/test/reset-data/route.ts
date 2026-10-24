@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getResetCooldownSeconds, isCrossSiteRequest } from "@/lib/reset-guard";
 import { errorResponse, jsonResponse } from "@/server/api-response";
-import { claimResetSlot } from "@/server/reset-cooldown";
+import { claimResetSlot, releaseResetSlot } from "@/server/reset-cooldown";
 import { seedDatabase } from "@/server/seed";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
     return errorResponse("No se pueden restablecer los datos desde otra página web", startedAt, 403);
   }
 
+  let claimed = false;
   try {
     const cooldownSeconds = getResetCooldownSeconds();
     const slot = await claimResetSlot(prisma, cooldownSeconds);
@@ -30,6 +31,7 @@ export async function POST(request: NextRequest) {
       return response;
     }
 
+    claimed = true;
     const counts = await seedDatabase(prisma);
     return jsonResponse(
       {
@@ -43,6 +45,12 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("[api/test/reset-data]", error);
-    return errorResponse("No se pudieron restablecer los datos", startedAt, 500);
+    // Si el reinicio falló no se cambió nada: se libera el turno para poder intentarlo de nuevo sin esperar.
+    if (claimed) {
+      await releaseResetSlot(prisma).catch((releaseError) =>
+        console.error("[api/test/reset-data] no se pudo liberar el turno", releaseError),
+      );
+    }
+    return errorResponse("No se pudieron restablecer los datos. No se cambió nada; puedes intentarlo de nuevo", startedAt, 500);
   }
 }

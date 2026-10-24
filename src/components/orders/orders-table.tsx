@@ -132,6 +132,8 @@ export function OrdersTable({ rows }: { rows: OrderRow[] }) {
               <th scope="col" className="w-12 px-4 py-3">
                 <input
                   ref={selectAllRef}
+                  id="select-all-orders"
+                  name="seleccionar-todos"
                   type="checkbox"
                   checked={allSelected}
                   onChange={toggleAll}
@@ -160,6 +162,9 @@ export function OrdersTable({ rows }: { rows: OrderRow[] }) {
                 >
                   <td className="px-4 py-3">
                     <input
+                      id={`select-${row.id}`}
+                      name="pedidos"
+                      value={row.id}
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => toggleRow(row.id)}
