@@ -11,6 +11,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Input, Select } from "@/components/ui/input";
+import { SavingSkeleton } from "@/components/ui/skeleton";
 import { calculateOrderTotals } from "@/lib/finance";
 import { formatCurrency, formatOrderNumber } from "@/lib/format";
 import { runAction } from "@/lib/run-action";
@@ -55,7 +56,12 @@ export function OrderForm({ customers, products }: OrderFormProps) {
   });
 
   return (
-    <form onSubmit={handleSubmit((values) => create.mutate(values))} noValidate className="grid gap-6 lg:grid-cols-3">
+    <form
+      onSubmit={handleSubmit((values) => create.mutate(values))}
+      noValidate
+      aria-busy={create.isPending || undefined}
+      className="grid gap-6 lg:grid-cols-3"
+    >
       <Card className="lg:col-span-2">
         <CardContent className="space-y-6">
           <Field label="¿Para quién es?" htmlFor="customerId" error={errors.customerId?.message}>
@@ -153,7 +159,7 @@ export function OrderForm({ customers, products }: OrderFormProps) {
           </div>
           <p className="text-xs text-slate-500">El pedido entra al tablero en el paso “Por preparar”.</p>
           <Button type="submit" className="w-full" disabled={create.isPending}>
-            {create.isPending ? "Creando pedido…" : "Crear pedido"}
+            {create.isPending ? <SavingSkeleton className="w-28 bg-white/40" label="Creando pedido…" /> : "Crear pedido"}
           </Button>
           <Link href="/pedidos" className={buttonVariants({ variant: "ghost", className: "w-full" })}>
             Cancelar

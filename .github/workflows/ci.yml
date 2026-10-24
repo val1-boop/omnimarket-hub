@@ -41,6 +41,8 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/omnimarket_ci
       DIRECT_URL: postgresql://postgres:postgres@localhost:5432/omnimarket_ci
       AUTH_TRUST_HOST: true
+      # Las pruebas reinician los datos antes de cada caso: aquí no hace falta esperar entre reinicios.
+      RESET_COOLDOWN_SECONDS: 0
       # Credenciales falsas: las pruebas nunca llegan a Google ni a GitHub.
       AUTH_GOOGLE_ID: ci-google-id
       AUTH_GOOGLE_SECRET: ci-google-secret

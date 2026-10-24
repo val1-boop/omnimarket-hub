@@ -2,7 +2,7 @@
 // El dinero se guarda en centavos (Int) para evitar errores de redondeo.
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   // "native": tu computadora y la CI. "rhel-openssl-3.0.x": los servidores de Vercel.
   // La CI compila en Ubuntu y Vercel ejecuta en Amazon Linux, así que se incluyen los dos motores.
   binaryTargets = ["native", "rhel-openssl-3.0.x"]
@@ -35,13 +35,13 @@ model Account {
   type                     String
   provider                 String
   providerAccountId        String
-  refresh_token            String? @db.Text
-  access_token             String? @db.Text
+  refresh_token            String?  @db.Text
+  access_token             String?  @db.Text
   expires_at               Int?
   refresh_token_expires_in Int?
   token_type               String?
   scope                    String?
-  id_token                 String? @db.Text
+  id_token                 String?  @db.Text
   session_state            String?
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
@@ -137,4 +137,11 @@ model OrderItem {
 
   @@index([orderId])
   @@index([productId])
+}
+
+// Cuándo se restablecieron por última vez los datos de prueba (una sola fila, id = 1).
+// Sirve para que POST /api/test/reset-data no se pueda usar muchas veces seguidas.
+model DataReset {
+  id          Int      @id
+  lastResetAt DateTime
 }

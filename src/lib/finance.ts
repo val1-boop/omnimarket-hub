@@ -35,9 +35,14 @@ export function calculateOrderTotals(lines: OrderLine[]) {
   return { totalCents, costCents, profitCents: totalCents - costCents };
 }
 
+/** Ticket promedio a partir de lo vendido y cuántos pedidos fueron (redondeado al centavo). */
+export function averageTicketFromTotals(revenueCents: number, orderCount: number): number {
+  if (orderCount <= 0) return 0;
+  return Math.round(revenueCents / orderCount);
+}
+
 /** Ticket promedio: lo que gasta en promedio cada pedido (redondeado al centavo). */
 export function calculateAverageTicket(orderTotalsCents: number[]): number {
-  if (orderTotalsCents.length === 0) return 0;
   const sum = orderTotalsCents.reduce((total, value) => total + value, 0);
-  return Math.round(sum / orderTotalsCents.length);
+  return averageTicketFromTotals(sum, orderTotalsCents.length);
 }

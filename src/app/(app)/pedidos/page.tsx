@@ -1,7 +1,7 @@
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
-import { OrdersFilters, ordersHref } from "@/components/orders/orders-filters";
+import { OrdersSearch, StatusChips, StatusChipsSkeleton, ordersHref } from "@/components/orders/orders-filters";
 import { OrdersTable } from "@/components/orders/orders-table";
 import { OrdersTableSkeleton } from "@/components/orders/orders-table-skeleton";
 import { PageHeader } from "@/components/page-header";
@@ -14,10 +14,13 @@ type PedidosPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
+// Los conteos por paso y la tabla se piden al mismo tiempo, dentro del Suspense,
+// así la página no se queda congelada mientras llegan.
 async function OrdersResults({ filters }: { filters: OrderFilters }) {
-  const { rows, total, pageCount } = await getOrdersPage(filters);
+  const [counts, { rows, total, pageCount }] = await Promise.all([getStatusCounts(), getOrdersPage(filters)]);
   return (
     <>
+      <StatusChips filters={filters} counts={counts} />
       <OrdersTable rows={rows} />
       {total > 0 && (
         <Pagination
@@ -33,7 +36,6 @@ async function OrdersResults({ filters }: { filters: OrderFilters }) {
 
 export default async function PedidosPage({ searchParams }: PedidosPageProps) {
   const filters = parseOrderFilters(await searchParams);
-  const counts = await getStatusCounts();
 
   return (
     <>
@@ -48,9 +50,17 @@ export default async function PedidosPage({ searchParams }: PedidosPageProps) {
           </Link>
         }
       />
-      <OrdersFilters filters={filters} counts={counts} />
+      <OrdersSearch filters={filters} />
       {/* Cada búsqueda o cambio de página muestra el esqueleto mientras llegan los datos */}
-      <Suspense key={JSON.stringify(filters)} fallback={<OrdersTableSkeleton />}>
+      <Suspense
+        key={JSON.stringify(filters)}
+        fallback={
+          <>
+            <StatusChipsSkeleton />
+            <OrdersTableSkeleton />
+          </>
+        }
+      >
         <OrdersResults filters={filters} />
       </Suspense>
     </>

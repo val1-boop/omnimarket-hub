@@ -12,3 +12,17 @@ export function Skeleton({ className, ...props }: ComponentProps<"div">) {
     />
   );
 }
+// Barra animada que indica que un cambio se está guardando (en vez de un spinner).
+// Es un <span> para poder ir dentro de botones y celdas.
+export function SavingSkeleton({ className, label = "Guardando…" }: { className?: string; label?: string }) {
+  return (
+    <span role="status" className="inline-flex items-center">
+      <span
+        aria-hidden="true"
+        data-testid="saving-skeleton"
+        className={cn("block h-1.5 w-20 animate-pulse rounded-full bg-slate-300", className)}
+      />
+      <span className="sr-only">{label}</span>
+    </span>
+  );
+}

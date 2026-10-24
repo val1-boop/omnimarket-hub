@@ -10,6 +10,7 @@ import { StatusBadge } from "@/components/orders/status-badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Select } from "@/components/ui/input";
+import { SavingSkeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDate, formatNumber, formatOrderNumber } from "@/lib/format";
 import { ORDER_STATUS_LABELS, ORDER_STATUSES } from "@/lib/order-status";
 import { runAction } from "@/lib/run-action";
@@ -27,6 +28,14 @@ export function OrdersTable({ rows }: { rows: OrderRow[] }) {
   // Cambios optimistas: se ven al instante y se deshacen si el servidor falla.
   const [statusOverrides, setStatusOverrides] = useState<Map<string, OrderStatus>>(new Map());
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+  // Pedidos cuyo cambio todavía se está guardando (muestran un esqueleto debajo del paso).
+  const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
+  const markSaving = (ids: string[], saving: boolean) =>
+    setSavingIds((current) => {
+      const next = new Set(current);
+      ids.forEach((id) => (saving ? next.add(id) : next.delete(id)));
+      return next;
+    });
 
   // Cuando llegan datos nuevos del servidor, ya no hacen falta los cambios optimistas.
   const [previousRows, setPreviousRows] = useState(rows);
@@ -51,8 +60,10 @@ export function OrdersTable({ rows }: { rows: OrderRow[] }) {
         ids.forEach((id) => next.set(id, status));
         return next;
       });
+      markSaving(ids, true);
       return { previous };
     },
+    onSettled: (_data, _error, { ids }) => markSaving(ids, false),
     onError: (error, _variables, context) => {
       if (context) setStatusOverrides(context.previous);
       toast.error(`${error.message} Regresamos los pedidos como estaban.`);
@@ -144,6 +155,7 @@ export function OrdersTable({ rows }: { rows: OrderRow[] }) {
                 <tr
                   key={row.id}
                   data-testid={`order-row-${orderNumber}`}
+                  aria-busy={savingIds.has(row.id) || undefined}
                   className={isSelected ? "bg-sand-50" : "hover:bg-slate-50"}
                 >
                   <td className="px-4 py-3">
@@ -161,7 +173,10 @@ export function OrdersTable({ rows }: { rows: OrderRow[] }) {
                   <td className="px-4 py-3 text-right text-slate-500">{formatNumber(row.itemCount)}</td>
                   <td className="px-4 py-3 text-right font-semibold text-navy-900">{formatCurrency(row.totalCents)}</td>
                   <td className="px-4 py-3">
-                    <StatusBadge status={row.status} />
+                    <div className="flex flex-col items-start gap-1.5">
+                      <StatusBadge status={row.status} />
+                      {savingIds.has(row.id) && <SavingSkeleton />}
+                    </div>
                   </td>
                 </tr>
               );

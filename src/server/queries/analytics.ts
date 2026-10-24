@@ -1,5 +1,5 @@
 import { calculateChange, fillDailySeries, getPeriodRange, type AnalyticsPeriod } from "@/lib/analytics";
-import { calculateMargin } from "@/lib/finance";
+import { averageTicketFromTotals, calculateMargin } from "@/lib/finance";
 import { prisma } from "@/lib/prisma";
 
 // Los pedidos cancelados no cuentan como venta.
@@ -67,8 +67,8 @@ export async function getSalesAnalytics(period: AnalyticsPeriod) {
   const previousOrders = previous._count._all;
   const canCompare = Boolean(history._min.createdAt && history._min.createdAt <= previousFrom);
   const change = (now: number, before: number) => (canCompare ? calculateChange(now, before) : null);
-  const averageTicket = orders > 0 ? Math.round(revenue / orders) : 0;
-  const previousAverageTicket = previousOrders > 0 ? Math.round(previousRevenue / previousOrders) : 0;
+  const averageTicket = averageTicketFromTotals(revenue, orders);
+  const previousAverageTicket = averageTicketFromTotals(previousRevenue, previousOrders);
 
   return {
     period,

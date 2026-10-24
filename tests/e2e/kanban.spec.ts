@@ -32,4 +32,25 @@ test.describe("Tablero (Drag & Drop)", () => {
     await page.reload();
     await expect(page.getByTestId("kanban-column-PROCESSING").getByTestId(cardId)).toBeVisible();
   });
+
+  test("mientras se guarda un movimiento, la tarjeta muestra un esqueleto", async ({ page }) => {
+    // Hacemos lento el guardado (las acciones del servidor son POST a la misma página) para alcanzar a verlo.
+    await page.route("**/kanban", async (route) => {
+      if (route.request().method() === "POST") await new Promise((resolve) => setTimeout(resolve, 1_500));
+      await route.continue();
+    });
+    await page.goto("/kanban");
+
+    const card = page.getByTestId("kanban-column-PENDING").locator("[data-testid^=kanban-card-]").first();
+    const cardId = (await card.getAttribute("data-testid"))!;
+    await card.getByRole("button", { name: /Pasar a Preparándose/ }).click();
+
+    const moved = page.getByTestId("kanban-column-PROCESSING").getByTestId(cardId);
+    await expect(moved.getByTestId("saving-skeleton")).toBeVisible();
+    await expect(moved).toHaveAttribute("aria-busy", "true");
+
+    // Al terminar de guardar, el esqueleto se quita.
+    await expect(page.getByText(/ahora está en “Preparándose”/)).toBeVisible();
+    await expect(moved.getByTestId("saving-skeleton")).toHaveCount(0);
+  });
 });
