@@ -43,3 +43,21 @@ export function formatDate(date: Date | string): string {
 export function formatOrderNumber(number: number): string {
   return `OM-${String(number).padStart(5, "0")}`;
 }
+
+/** Dinero abreviado para los ejes de las gráficas: 1250000 → "$12.5 mil", 125000000 → "$1.3 M" */
+export function formatCompactCurrency(cents: number): string {
+  const pesos = cents / 100;
+  const trim = (value: number) => value.toFixed(1).replace(/\.0$/, "");
+  if (Math.abs(pesos) >= 1_000_000) return `$${trim(pesos / 1_000_000)} M`;
+  if (Math.abs(pesos) >= 1_000) return `$${trim(pesos / 1_000)} mil`;
+  return `$${Math.round(pesos)}`;
+}
+
+/** Fecha AAAA-MM-DD a texto corto: "2026-10-24" → "24 oct" */
+export function formatDayKey(key: string, style: "short" | "long" = "short"): string {
+  const [year, month, day] = key.split("-").map(Number);
+  return new Intl.DateTimeFormat(LOCALE, {
+    timeZone: "UTC",
+    ...(style === "short" ? { day: "numeric", month: "short" } : { weekday: "long", day: "numeric", month: "long" }),
+  }).format(new Date(Date.UTC(year, month - 1, day)));
+}

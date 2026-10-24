@@ -12,6 +12,8 @@
   --color-sand-500: #b4916c;
   --color-sand-600: #9a7752;
   --color-sand-700: #7b5c3d;
+    /* Color de las gráficas: azul de la marca validado para daltonismo y contraste. */
+  --color-chart-1: #3d5ab8;
 }
 
 @theme inline {

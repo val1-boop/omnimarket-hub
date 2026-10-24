@@ -1,9 +1,14 @@
 import type { OrderStatus } from "@prisma/client";
 import { ArrowRight, ClipboardList, Package, SquareKanban } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
 import { auth } from "@/auth";
+import { AnalyticsSection } from "@/components/analytics/analytics-section";
+import { AnalyticsSkeleton } from "@/components/analytics/analytics-skeleton";
+import { PeriodFilter } from "@/components/analytics/period-filter";
 import { SectionTitle } from "@/components/section-title";
 import { buttonVariants } from "@/components/ui/button";
+import { parsePeriod } from "@/lib/analytics";
 import { formatNumber } from "@/lib/format";
 import { ORDER_STATUS_LABELS } from "@/lib/order-status";
 import { prisma } from "@/lib/prisma";
@@ -39,7 +44,12 @@ const SHORTCUTS = [
   },
 ];
 
-export default async function DashboardPage() {
+type DashboardPageProps = {
+  searchParams: Promise<{ periodo?: string | string[] }>;
+};
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
+  const period = parsePeriod((await searchParams).periodo);
   const [session, statusCounts] = await Promise.all([
     auth(),
     prisma.order.groupBy({ by: ["status"], _count: { _all: true } }),
@@ -101,6 +111,19 @@ export default async function DashboardPage() {
             Cancelados: {formatNumber(countOf("CANCELLED"))}
           </p>
         </div>
+      </section>
+
+      {/* Números de ventas del periodo elegido */}
+      <section aria-labelledby="tus-numeros">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 id="tus-numeros" className="font-display text-sm font-bold uppercase tracking-wider text-navy-900">
+            Tus números
+          </h2>
+          <PeriodFilter period={period} />
+        </div>
+        <Suspense key={period} fallback={<AnalyticsSkeleton />}>
+          <AnalyticsSection period={period} />
+        </Suspense>
       </section>
 
       {/* Accesos rápidos */}
