@@ -12,7 +12,8 @@ export async function POST() {
   try {
     const counts = await seedDatabase(prisma);
     return jsonResponse({ ok: true, message: "Datos de prueba restablecidos", counts }, startedAt);
-  } catch {
+  } catch (error) {
+    console.error("[api/test/reset-data]", error);
     return errorResponse("No se pudieron restablecer los datos", startedAt, 500);
   }
 }

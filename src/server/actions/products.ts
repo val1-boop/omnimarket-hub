@@ -39,7 +39,8 @@ export async function createProduct(input: unknown): Promise<ActionResult<{ id: 
     });
     revalidateCatalog();
     return { ok: true, data: { id: product.id, name: product.name } };
-  } catch {
+  } catch (error) {
+    console.error("[products.createProduct]", error);
     return { ok: false, message: "No pudimos guardar el producto. Inténtalo otra vez." };
   }
 }
@@ -58,7 +59,8 @@ export async function updateProduct(id: string, input: unknown): Promise<ActionR
     });
     revalidateCatalog();
     return { ok: true, data: { name: product.name } };
-  } catch {
+  } catch (error) {
+    console.error("[products.updateProduct]", error);
     return { ok: false, message: "No pudimos guardar los cambios. Inténtalo otra vez." };
   }
 }
@@ -78,7 +80,8 @@ export async function deleteProduct(id: string): Promise<ActionResult<{ name: st
     const product = await prisma.product.delete({ where: { id } });
     revalidateCatalog();
     return { ok: true, data: { name: product.name } };
-  } catch {
+  } catch (error) {
+    console.error("[products.deleteProduct]", error);
     return { ok: false, message: "No pudimos borrar el producto. Inténtalo otra vez." };
   }
 }

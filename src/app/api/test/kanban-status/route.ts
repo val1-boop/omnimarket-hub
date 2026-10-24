@@ -34,7 +34,8 @@ export async function GET(request: NextRequest) {
     const result = await getKanbanOrderStatus(where);
     if (!result) return errorResponse("No existe ese pedido", startedAt, 404);
     return jsonResponse({ order: result }, startedAt);
-  } catch {
+  } catch (error) {
+    console.error("[api/test/kanban-status]", error);
     return errorResponse("No se pudo consultar el tablero", startedAt, 500);
   }
 }
