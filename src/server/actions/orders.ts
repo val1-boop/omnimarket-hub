@@ -54,7 +54,8 @@ export async function createOrder(input: unknown): Promise<ActionResult<{ number
     });
     revalidateOrders();
     return { ok: true, data: { number: order.number } };
-  } catch {
+  } catch (error) {
+    console.error("[orders.createOrder]", error);
     return { ok: false, message: "No pudimos crear el pedido. Inténtalo otra vez." };
   }
 }
@@ -72,7 +73,8 @@ export async function bulkUpdateOrderStatus(input: unknown): Promise<ActionResul
     });
     revalidateOrders();
     return { ok: true, data: { count } };
-  } catch {
+  } catch (error) {
+    console.error("[orders.bulkUpdateOrderStatus]", error);
     return { ok: false, message: "No pudimos guardar el cambio." };
   }
 }
@@ -87,7 +89,8 @@ export async function bulkDeleteOrders(input: unknown): Promise<ActionResult<{ c
     const { count } = await prisma.order.deleteMany({ where: { id: { in: parsed.data.ids } } });
     revalidateOrders();
     return { ok: true, data: { count } };
-  } catch {
+  } catch (error) {
+    console.error("[orders.bulkDeleteOrders]", error);
     return { ok: false, message: "No pudimos borrar los pedidos." };
   }
 }
@@ -109,7 +112,8 @@ export async function moveOrder(input: unknown): Promise<ActionResult<{ number: 
     });
     revalidateOrders();
     return { ok: true, data: { number: order.number } };
-  } catch {
+  } catch (error) {
+    console.error("[orders.moveOrder]", error);
     return { ok: false, message: "No pudimos mover el pedido." };
   }
 }

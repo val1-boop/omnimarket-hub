@@ -104,6 +104,8 @@ jobs:
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      # Dominio fijo de producción (el que se entrega al evaluador).
+      PRODUCTION_URL: https://omnimarket-hub-brown.vercel.app
 
     steps:
       - uses: actions/checkout@v4
@@ -134,3 +136,27 @@ jobs:
           url=$(npx vercel@65 deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Publicado en: $url"
+
+      # Si la app publicada no responde bien, el pipeline queda en rojo y se nota de inmediato.
+      - name: Comprobar que producción responde
+        run: |
+          url="$PRODUCTION_URL/api/test/analytics?page=1&limit=50"
+          for i in $(seq 1 10); do
+            status=$(curl -s -o /dev/null -w "%{http_code}" "$url")
+            [ "$status" = "200" ] && break
+            echo "Intento $i: respondió $status, reintento en 10 s..."
+            sleep 10
+          done
+          if [ "$status" != "200" ]; then
+            echo "::error::Producción respondió $status en $url"
+            exit 1
+          fi
+          for path in /login /api/test/kanban-status; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$PRODUCTION_URL$path")
+            echo "$path → $code"
+            [ "$code" = "200" ] || { echo "::error::$path respondió $code"; exit 1; }
+          done
+          echo "Tiempo total de /api/test/analytics visto desde GitHub Actions:"
+          for i in 1 2 3 4 5; do curl -s -o /dev/null -w "  %{time_total} s\n" "$url"; done
+          echo "Tiempo dentro del servidor (meta.durationMs):"
+          curl -s "$url" | grep -o '"durationMs":[0-9.]*'

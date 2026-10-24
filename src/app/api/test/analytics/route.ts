@@ -19,7 +19,8 @@ export async function GET(request: NextRequest) {
   try {
     const result = await getAnalyticsPage(parsed.data);
     return jsonResponse(result, startedAt);
-  } catch {
+  } catch (error) {
+    console.error("[api/test/analytics]", error);
     return errorResponse("No se pudieron calcular las métricas", startedAt, 500);
   }
 }
