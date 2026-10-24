@@ -187,15 +187,26 @@ async function checkSession(browser) {
     const value = await encode({ token: { sub: user.id, name: user.name, email: user.email }, secret, salt: cookieName });
     await context.addCookies([{ name: cookieName, value, url: BASE, httpOnly: true, secure, sameSite: "Lax" }]);
 
+    // Antes de revisar páginas, se confirma que producción acepta la sesión simulada.
+    const session = await (await fetch(`${BASE}/api/auth/session`, { headers: { cookie: `${cookieName}=${value}` } })).json().catch(() => null);
+    if (session?.user?.id !== user.id) {
+      // No es una falla de la app: el AUTH_SECRET leído no es el que usa producción.
+      s.info(`NO VERIFICADO: producción no aceptó la sesión simulada (AUTH_SECRET leído de Vercel: ${secret.length} caracteres). Las páginas con sesión se comprueban con las pruebas E2E y con un inicio de sesión real.`);
+      console.log("::warning title=Sesión::Producción no aceptó la sesión simulada: no se revisaron las páginas con sesión");
+      return;
+    }
+    s.ok("Producción aceptó la sesión simulada");
+
     const page = await context.newPage();
     const problems = [];
     page.on("console", (message) => message.type() === "error" && problems.push(`${new URL(page.url()).pathname}: ${message.text().slice(0, 150)}`));
     page.on("pageerror", (error) => problems.push(`${new URL(page.url()).pathname}: ${error.message.slice(0, 150)}`));
 
+    // Una página privada que termina en el login no cuenta como cargada.
     const visit = async (path) => {
       const response = await page.goto(BASE + path);
       await page.waitForLoadState("networkidle");
-      return response?.status();
+      return new URL(page.url()).pathname.startsWith("/login") ? "redirigió al login" : response?.status();
     };
 
     // Cuenta nueva: su tienda empieza vacía.
