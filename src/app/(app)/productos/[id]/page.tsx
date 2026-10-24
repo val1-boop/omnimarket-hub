@@ -5,12 +5,15 @@ import { ProductForm } from "@/components/products/product-form";
 import { centsToPesos } from "@/lib/finance";
 import { prisma } from "@/lib/prisma";
 import { PRODUCT_CATEGORIES } from "@/lib/validation/product";
+import { requireStoreContext } from "@/server/store";
 
 type EditarProductoPageProps = { params: Promise<{ id: string }> };
 
 export default async function EditarProductoPage({ params }: EditarProductoPageProps) {
   const { id } = await params;
-  const product = await prisma.product.findUnique({ where: { id } });
+  const { store } = await requireStoreContext();
+  // Solo se encuentra si el producto es de la tienda con la que estás trabajando.
+  const product = await prisma.product.findFirst({ where: { id, storeId: store.id } });
   if (!product) notFound();
 
   const category = PRODUCT_CATEGORIES.find((item) => item === product.category) ?? PRODUCT_CATEGORIES[0];

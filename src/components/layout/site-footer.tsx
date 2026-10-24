@@ -32,7 +32,7 @@ export function SiteFooter() {
               Aviso de privacidad
             </Link>
           </p>
-          <p>Los productos, clientes y pedidos que ves son de prueba: sirven para enseñar cómo funciona la tienda.</p>
+          <p>Lo que registras en “Mi tienda” es solo tuyo. La tienda de demostración tiene datos de ejemplo.</p>
         </div>
       </div>
     </footer>

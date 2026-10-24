@@ -9,20 +9,20 @@ type CategoryRow = { category: string; revenue: bigint; profit: bigint; pieces: 
 type TopProductRow = { id: string; name: string; category: string; pieces: bigint; revenue: bigint };
 type DailyRow = { day: string; revenue: bigint; orders: bigint };
 
-export async function getSalesAnalytics(period: AnalyticsPeriod) {
+export async function getSalesAnalytics(period: AnalyticsPeriod, storeId: string) {
   const { from, previousFrom, dayKeys } = getPeriodRange(period);
 
   const [history, current, previous, daily, categories, topProducts] = await Promise.all([
     // Fecha del primer pedido registrado: si es más reciente que el inicio del periodo anterior,
     // no hay datos completos para comparar.
-    prisma.order.aggregate({ _min: { createdAt: true } }),
+    prisma.order.aggregate({ where: { storeId }, _min: { createdAt: true } }),
     prisma.order.aggregate({
-      where: { ...SOLD, createdAt: { gte: from } },
+      where: { ...SOLD, storeId, createdAt: { gte: from } },
       _sum: { totalCents: true, costCents: true },
       _count: { _all: true },
     }),
     prisma.order.aggregate({
-      where: { ...SOLD, createdAt: { gte: previousFrom, lt: from } },
+      where: { ...SOLD, storeId, createdAt: { gte: previousFrom, lt: from } },
       _sum: { totalCents: true, costCents: true },
       _count: { _all: true },
     }),
@@ -32,7 +32,7 @@ export async function getSalesAnalytics(period: AnalyticsPeriod) {
              SUM("totalCents")::bigint AS revenue,
              COUNT(*)::bigint AS orders
       FROM "Order"
-      WHERE status <> 'CANCELLED' AND "createdAt" >= ${from}
+      WHERE "storeId" = ${storeId} AND status <> 'CANCELLED' AND "createdAt" >= ${from}
       GROUP BY 1
       ORDER BY 1`,
     prisma.$queryRaw<CategoryRow[]>`
@@ -43,7 +43,7 @@ export async function getSalesAnalytics(period: AnalyticsPeriod) {
       FROM "OrderItem" oi
       JOIN "Order" o ON o.id = oi."orderId"
       JOIN "Product" p ON p.id = oi."productId"
-      WHERE o.status <> 'CANCELLED' AND o."createdAt" >= ${from}
+      WHERE o."storeId" = ${storeId} AND o.status <> 'CANCELLED' AND o."createdAt" >= ${from}
       GROUP BY p.category
       ORDER BY revenue DESC`,
     prisma.$queryRaw<TopProductRow[]>`
@@ -53,7 +53,7 @@ export async function getSalesAnalytics(period: AnalyticsPeriod) {
       FROM "OrderItem" oi
       JOIN "Order" o ON o.id = oi."orderId"
       JOIN "Product" p ON p.id = oi."productId"
-      WHERE o.status <> 'CANCELLED' AND o."createdAt" >= ${from}
+      WHERE o."storeId" = ${storeId} AND o.status <> 'CANCELLED' AND o."createdAt" >= ${from}
       GROUP BY p.id, p.name, p.category
       ORDER BY pieces DESC, revenue DESC
       LIMIT 5`,

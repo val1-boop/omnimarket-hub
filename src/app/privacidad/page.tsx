@@ -78,8 +78,13 @@ export default async function PrivacidadPage() {
               datos de pago.
             </p>
             <p>
-              Los productos, clientes y pedidos que aparecen dentro de la tienda son de prueba e inventados para la
-              materia; no son personas reales.
+              Además se guarda lo que tú registras en <strong className="text-navy-900">“Mi tienda”</strong>:
+              productos, pedidos y los clientes que das de alta (solo nombre y ciudad). Solo tú lo ves. Como es un
+              proyecto escolar, te pedimos no registrar datos de personas reales.
+            </p>
+            <p>
+              La <strong className="text-navy-900">Tienda de demostración</strong> tiene productos, clientes y pedidos
+              inventados para la materia; no son personas reales. La comparten todos los que entran.
             </p>
           </Section>
 
@@ -87,6 +92,7 @@ export default async function PrivacidadPage() {
             <ul>
               <li>Para dejarte entrar y saber que eres tú.</li>
               <li>Para mostrar tu nombre, correo y foto dentro de la app.</li>
+              <li>Para guardar lo que registras en tu tienda y mostrártelo solo a ti.</li>
             </ul>
             <p>No los usamos para nada más: no los vendemos, no los usamos para publicidad y no te mandamos correos.</p>
           </Section>
@@ -112,8 +118,10 @@ export default async function PrivacidadPage() {
 
           <Section title="Cookies">
             <p>
-              Usamos únicamente las cookies necesarias para mantener tu sesión abierta de forma segura. Tu sesión dura
-              hasta 30 días o hasta que toques “Cerrar sesión”. No usamos cookies de publicidad ni de seguimiento.
+              Usamos únicamente las cookies necesarias para que la app funcione: una mantiene tu sesión abierta de
+              forma segura (dura hasta 30 días o hasta que toques “Cerrar sesión”) y otra recuerda si estás viendo
+              “Mi tienda” o la Tienda de demostración (dura hasta un año y se borra al cerrar sesión). No usamos
+              cookies de publicidad ni de seguimiento.
             </p>
           </Section>
 

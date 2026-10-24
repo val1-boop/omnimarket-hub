@@ -15,7 +15,7 @@ import { SavingSkeleton } from "@/components/ui/skeleton";
 import { calculateOrderTotals } from "@/lib/finance";
 import { formatCurrency, formatOrderNumber } from "@/lib/format";
 import { runAction } from "@/lib/run-action";
-import { orderSchema, type OrderInput } from "@/lib/validation/order";
+import { NEW_CUSTOMER, orderSchema, type OrderInput } from "@/lib/validation/order";
 import { createOrder } from "@/server/actions/orders";
 
 type OrderFormProps = {
@@ -32,8 +32,15 @@ export function OrderForm({ customers, products }: OrderFormProps) {
     formState: { errors },
   } = useForm<OrderInput>({
     resolver: zodResolver(orderSchema),
-    defaultValues: { customerId: "", items: [{ productId: "", quantity: 1 }] },
+    // Si la tienda todavía no tiene clientes, el formulario empieza en "Cliente nuevo".
+    defaultValues: {
+      customerId: customers.length === 0 ? NEW_CUSTOMER : "",
+      newCustomer: { name: "", city: "" },
+      items: [{ productId: "", quantity: 1 }],
+    },
   });
+  const customerId = useWatch({ control, name: "customerId" });
+  const isNewCustomer = customerId === NEW_CUSTOMER;
   const { fields, append, remove } = useFieldArray({ control, name: "items" });
   const items = useWatch({ control, name: "items" });
 
@@ -65,8 +72,14 @@ export function OrderForm({ customers, products }: OrderFormProps) {
       <Card className="lg:col-span-2">
         <CardContent className="space-y-6">
           <Field label="¿Para quién es?" htmlFor="customerId" error={errors.customerId?.message}>
-            <Select id="customerId" aria-invalid={Boolean(errors.customerId)} {...register("customerId")}>
+            <Select
+              id="customerId"
+              aria-invalid={Boolean(errors.customerId)}
+              defaultValue={customers.length === 0 ? NEW_CUSTOMER : ""}
+              {...register("customerId")}
+            >
               <option value="">Elige un cliente…</option>
+              <option value={NEW_CUSTOMER}>+ Cliente nuevo</option>
               {customers.map((customer) => (
                 <option key={customer.id} value={customer.id}>
                   {customer.name} · {customer.city}
@@ -74,6 +87,27 @@ export function OrderForm({ customers, products }: OrderFormProps) {
               ))}
             </Select>
           </Field>
+
+          {isNewCustomer && (
+            <div className="grid gap-4 rounded-xl bg-sand-50 p-4 sm:grid-cols-2" data-testid="new-customer">
+              <Field label="Nombre del cliente" htmlFor="newCustomerName" error={errors.newCustomer?.name?.message}>
+                <Input
+                  id="newCustomerName"
+                  placeholder="Ej. Laura Méndez"
+                  aria-invalid={Boolean(errors.newCustomer?.name)}
+                  {...register("newCustomer.name")}
+                />
+              </Field>
+              <Field label="Ciudad" htmlFor="newCustomerCity" error={errors.newCustomer?.city?.message}>
+                <Input
+                  id="newCustomerCity"
+                  placeholder="Ej. Cuernavaca"
+                  aria-invalid={Boolean(errors.newCustomer?.city)}
+                  {...register("newCustomer.city")}
+                />
+              </Field>
+            </div>
+          )}
 
           <fieldset className="space-y-3">
             <legend className="text-sm font-medium text-navy-900">¿Qué se lleva?</legend>

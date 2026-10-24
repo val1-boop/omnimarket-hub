@@ -10,9 +10,22 @@ export const orderItemSchema = z.object({
     .max(99, "Máximo 99 piezas"),
 });
 
+/** Valor especial del selector de cliente: el cliente se crea junto con el pedido. */
+export const NEW_CUSTOMER = "nuevo";
+
+export const newCustomerSchema = z.object({
+  name: z.string().trim().min(2, "Escribe el nombre del cliente").max(80, "Máximo 80 letras"),
+  city: z.string().trim().min(2, "Escribe la ciudad").max(60, "Máximo 60 letras"),
+});
+
+const isNewCustomer = (payload: { value: unknown }) =>
+  (payload.value as { customerId?: unknown } | undefined)?.customerId === NEW_CUSTOMER;
+
 export const orderSchema = z
   .object({
     customerId: z.string().min(1, "Elige a quién le vendes"),
+    // Solo cuenta si se eligió "Cliente nuevo"; si no, se ignora.
+    newCustomer: z.object({ name: z.string().optional(), city: z.string().optional() }).optional(),
     items: z
       .array(orderItemSchema)
       .min(1, "Agrega al menos un producto")
@@ -21,7 +34,22 @@ export const orderSchema = z
   .refine((order) => new Set(order.items.map((item) => item.productId)).size === order.items.length, {
     path: ["items"],
     message: "Repetiste un producto: mejor súbele a la cantidad",
-  });
+  })
+  // "when": estas revisiones corren aunque otros campos tengan errores, así se ven todos de una vez.
+  .refine((order) => newCustomerSchema.shape.name.safeParse(order.newCustomer?.name ?? "").success, {
+    path: ["newCustomer", "name"],
+    message: "Escribe el nombre del cliente (de 2 a 80 letras)",
+    when: isNewCustomer,
+  })
+  .refine((order) => newCustomerSchema.shape.city.safeParse(order.newCustomer?.city ?? "").success, {
+    path: ["newCustomer", "city"],
+    message: "Escribe la ciudad (de 2 a 60 letras)",
+    when: isNewCustomer,
+  })
+  .transform((order) => ({
+    ...order,
+    newCustomer: order.customerId === NEW_CUSTOMER ? newCustomerSchema.parse(order.newCustomer) : undefined,
+  }));
 
 const orderIdsSchema = z
   .array(z.string().min(1))
@@ -41,7 +69,7 @@ export const moveOrderSchema = z.object({
   status: z.enum(ORDER_STATUSES, { error: "Ese paso no existe" }),
 });
 
-export type OrderInput = z.infer<typeof orderSchema>;
+export type OrderInput = z.input<typeof orderSchema>;
 export type BulkUpdateInput = z.infer<typeof bulkUpdateSchema>;
 
 export type MoveOrderInput = z.infer<typeof moveOrderSchema>;

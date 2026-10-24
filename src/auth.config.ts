@@ -12,9 +12,11 @@ const PUBLIC_PATHS = ["/privacidad"];
 
 export const authConfig = {
   providers: [
-    // Permite entrar con Google o GitHub usando el mismo correo sin error de cuenta no vinculada.
-    Google({ allowDangerousEmailAccountLinking: true }),
-    GitHub({ allowDangerousEmailAccountLinking: true }),
+    // No se unen cuentas solo por tener el mismo correo: si alguien ya entró con Google y luego
+    // intenta con GitHub (o al revés) usando ese correo, Auth.js responde OAuthAccountNotLinked
+    // y el login le pide entrar con el método que usó la primera vez.
+    Google,
+    GitHub,
   ],
   pages: {
     signIn: "/login",

@@ -9,6 +9,7 @@ import { Pagination } from "@/components/pagination";
 import { buttonVariants } from "@/components/ui/button";
 import { parseOrderFilters, type OrderFilters } from "@/lib/filters";
 import { getOrdersPage, getStatusCounts } from "@/server/queries/orders";
+import { requireStoreContext } from "@/server/store";
 
 type PedidosPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -17,7 +18,27 @@ type PedidosPageProps = {
 // Los conteos por paso y la tabla se piden al mismo tiempo, dentro del Suspense,
 // así la página no se queda congelada mientras llegan.
 async function OrdersResults({ filters }: { filters: OrderFilters }) {
-  const [counts, { rows, total, pageCount }] = await Promise.all([getStatusCounts(), getOrdersPage(filters)]);
+  const { store } = await requireStoreContext();
+  const [counts, { rows, total, pageCount }] = await Promise.all([
+    getStatusCounts(store.id),
+    getOrdersPage(filters, store.id),
+  ]);
+  // Tienda sin ningún pedido: en lugar de una tabla vacía, se explica cómo empezar.
+  const storeTotal = [...counts.values()].reduce((sum, value) => sum + value, 0);
+  if (storeTotal === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center" data-testid="orders-empty">
+        <p className="font-display text-sm font-bold uppercase tracking-wider text-navy-900">
+          Todavía no tienes pedidos
+        </p>
+        <p className="mt-1 text-sm text-slate-500">Cuando registres tu primer pedido, aparecerá aquí.</p>
+        <Link href="/pedidos/nuevo" className={buttonVariants({ className: "mt-6" })}>
+          Registrar mi primer pedido
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <>
       <StatusChips filters={filters} counts={counts} />

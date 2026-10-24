@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bulkUpdateSchema, moveOrderSchema, orderSchema } from "@/lib/validation/order";
+import { bulkUpdateSchema, moveOrderSchema, NEW_CUSTOMER, orderSchema } from "@/lib/validation/order";
 import { productSchema } from "@/lib/validation/product";
 import { analyticsQuerySchema } from "@/lib/validation/test-api";
 
@@ -41,6 +41,32 @@ describe("esquemas Zod de entrada", () => {
       ],
     });
     expect(firstError(repeated)).toBe("Repetiste un producto: mejor súbele a la cantidad");
+  });
+
+  it("con “Cliente nuevo” exige nombre y ciudad; con un cliente existente los ignora", () => {
+    const items = [{ productId: "p1", quantity: 1 }];
+    const missing = orderSchema.safeParse({ customerId: NEW_CUSTOMER, newCustomer: { name: " ", city: "" }, items });
+    expect(missing.success).toBe(false);
+    expect(missing.error?.issues.map((issue) => issue.path.join("."))).toEqual(["newCustomer.name", "newCustomer.city"]);
+
+    // Aunque también falte el producto, se avisa todo de una vez.
+    const everything = orderSchema.safeParse({ customerId: NEW_CUSTOMER, items: [{ productId: "", quantity: 1 }] });
+    expect(everything.error?.issues.map((issue) => issue.message)).toEqual([
+      "Elige un producto",
+      "Escribe el nombre del cliente (de 2 a 80 letras)",
+      "Escribe la ciudad (de 2 a 60 letras)",
+    ]);
+
+    const created = orderSchema.safeParse({
+      customerId: NEW_CUSTOMER,
+      newCustomer: { name: "  Laura Méndez ", city: "Cuernavaca" },
+      items,
+    });
+    expect(created.success && created.data.newCustomer).toEqual({ name: "Laura Méndez", city: "Cuernavaca" });
+
+    // Si se eligió un cliente existente, lo escrito en "Cliente nuevo" no cuenta.
+    const existing = orderSchema.safeParse({ customerId: "c1", newCustomer: { name: "", city: "" }, items });
+    expect(existing.success && existing.data.newCustomer).toBeUndefined();
   });
 
   it("valida la edición en lote y el movimiento en el tablero", () => {

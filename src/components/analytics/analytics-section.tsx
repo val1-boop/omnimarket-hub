@@ -7,14 +7,27 @@ import { calculateMargin } from "@/lib/finance";
 import { formatCurrency, formatDayKey, formatNumber, formatPercent } from "@/lib/format";
 import { getSalesAnalytics } from "@/server/queries/analytics";
 
-export async function AnalyticsSection({ period }: { period: AnalyticsPeriod }) {
-  const { kpis, daily, categories, topProducts } = await getSalesAnalytics(period);
+export async function AnalyticsSection({ period, storeId }: { period: AnalyticsPeriod; storeId: string }) {
+  const { kpis, daily, categories, topProducts } = await getSalesAnalytics(period, storeId);
 
+  // Sin ventas en el periodo: se conserva la estructura, pero se distingue un cero real
+  // (lo vendido y los pedidos) de lo que no se puede calcular sin ventas (ganancia, margen, ticket).
   if (kpis.orders === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center">
-        <p className="font-display text-sm font-bold uppercase tracking-wider text-navy-900">Todavía no hay ventas</p>
-        <p className="mt-1 text-sm text-slate-500">En los últimos {period} días no se registró ningún pedido.</p>
+      <div className="space-y-6" data-testid="analytics-empty">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatTile label="Vendiste" value={formatCurrency(0)} detail="Ninguna venta en este periodo" period={period} />
+          <StatTile label="Te quedó de ganancia" value="—" detail="Sin ventas para calcularla" period={period} />
+          <StatTile label="Pedidos" value="0" detail="Sin contar cancelados" period={period} />
+          <StatTile label="Ticket promedio" value="—" detail="Sin ventas para calcularlo" period={period} />
+        </div>
+        <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center">
+          <p className="font-display text-sm font-bold uppercase tracking-wider text-navy-900">Todavía no hay ventas</p>
+          <p className="mt-1 text-sm text-slate-500">
+            En los últimos {period} días no se registró ningún pedido, así que no hay gráfica ni productos más
+            vendidos que mostrar. Aparecerán en cuanto registres tus pedidos.
+          </p>
+        </div>
       </div>
     );
   }

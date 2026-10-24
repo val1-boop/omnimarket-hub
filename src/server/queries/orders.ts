@@ -1,8 +1,9 @@
 import { buildOrderWhere, ORDERS_PAGE_SIZE, type OrderFilters } from "@/lib/filters";
 import { prisma } from "@/lib/prisma";
 
-export async function getOrdersPage(filters: OrderFilters) {
-  const where = buildOrderWhere(filters);
+// Todas las consultas reciben la tienda: nunca se mezclan pedidos de tiendas distintas.
+export async function getOrdersPage(filters: OrderFilters, storeId: string) {
+  const where = { ...buildOrderWhere(filters), storeId };
 
   const [total, orders] = await Promise.all([
     prisma.order.count({ where }),
@@ -40,7 +41,7 @@ export async function getOrdersPage(filters: OrderFilters) {
 
 export type OrderRow = Awaited<ReturnType<typeof getOrdersPage>>["rows"][number];
 
-export async function getStatusCounts() {
-  const rows = await prisma.order.groupBy({ by: ["status"], _count: { _all: true } });
+export async function getStatusCounts(storeId: string) {
+  const rows = await prisma.order.groupBy({ by: ["status"], where: { storeId }, _count: { _all: true } });
   return new Map(rows.map((row) => [row.status, row._count._all]));
 }

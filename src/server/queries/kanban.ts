@@ -2,12 +2,12 @@ import { KANBAN_COLUMN_LIMIT, type KanbanColumn } from "@/lib/kanban";
 import { ORDER_STATUSES } from "@/lib/order-status";
 import { prisma } from "@/lib/prisma";
 
-export async function getKanbanBoard(): Promise<KanbanColumn[]> {
+export async function getKanbanBoard(storeId: string): Promise<KanbanColumn[]> {
   const [counts, ...columns] = await Promise.all([
-    prisma.order.groupBy({ by: ["status"], _count: { _all: true } }),
+    prisma.order.groupBy({ by: ["status"], where: { storeId }, _count: { _all: true } }),
     ...ORDER_STATUSES.map((status) =>
       prisma.order.findMany({
-        where: { status },
+        where: { storeId, status },
         // Lo que se movió o actualizó al último queda hasta arriba.
         orderBy: [{ updatedAt: "desc" }, { number: "desc" }],
         take: KANBAN_COLUMN_LIMIT,

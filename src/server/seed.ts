@@ -1,8 +1,10 @@
 import { OrderStatus, type PrismaClient } from "@prisma/client";
+import { DEMO_STORE_ID, DEMO_STORE_NAME } from "@/lib/stores";
 
 // Conjunto de datos de prueba DETERMINISTA: cada ejecución genera exactamente
 // los mismos productos, clientes y pedidos. Lo usan `npm run db:seed` y el
 // endpoint POST /api/test/reset-data para que los tests E2E sean repetibles.
+// Todo vive en la Tienda de demostración: las tiendas de los usuarios no se tocan.
 
 const ORDER_COUNT = 300;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -68,6 +70,7 @@ export function buildSeedData(now = new Date()) {
 
   const products = PRODUCTS.map(([name, category, priceCents, costCents, stock], index) => ({
     id: `prod_${pad(index + 1, 3)}`,
+    storeId: DEMO_STORE_ID,
     sku: `OM-${category.slice(0, 3).toUpperCase()}-${pad(index + 1, 3)}`,
     name,
     category,
@@ -81,6 +84,7 @@ export function buildSeedData(now = new Date()) {
     const last = LAST_NAMES[Math.floor(index / FIRST_NAMES.length) % LAST_NAMES.length];
     return {
       id: `cust_${pad(index + 1, 3)}`,
+      storeId: DEMO_STORE_ID,
       name: `${first} ${last}`,
       email: `cliente${pad(index + 1, 3)}@omnimarket.test`,
       city: CITIES[index % CITIES.length],
@@ -121,6 +125,9 @@ export function buildSeedData(now = new Date()) {
 
     orders.push({
       id: orderId,
+      storeId: DEMO_STORE_ID,
+      // Número fijo (OM-00001 … OM-00300) para que la demostración siempre sea igual.
+      number: index + 1,
       status,
       position,
       totalCents,
@@ -134,18 +141,29 @@ export function buildSeedData(now = new Date()) {
   return { products, customers, orders, orderItems };
 }
 
-// Borra los datos de e-commerce (NO toca usuarios ni sesiones) y carga el set de prueba.
+// Vuelve a dejar la Tienda de demostración como al principio. Solo borra lo de esa tienda:
+// usuarios, sesiones y las tiendas de cada usuario no se tocan. Todo pasa en una sola
+// transacción: si algo falla, no se cambia nada.
 export async function seedDatabase(prisma: PrismaClient) {
   const data = buildSeedData();
+  const demo = { storeId: DEMO_STORE_ID };
 
   await prisma.$transaction([
-    prisma.$executeRawUnsafe(
-      'TRUNCATE TABLE "OrderItem", "Order", "Customer", "Product" RESTART IDENTITY CASCADE',
-    ),
+    prisma.store.upsert({
+      where: { id: DEMO_STORE_ID },
+      update: {},
+      create: { id: DEMO_STORE_ID, name: DEMO_STORE_NAME, isDemo: true },
+    }),
+    // Al borrar los pedidos se borran sus líneas (onDelete: Cascade).
+    prisma.order.deleteMany({ where: demo }),
+    prisma.customer.deleteMany({ where: demo }),
+    prisma.product.deleteMany({ where: demo }),
     prisma.product.createMany({ data: data.products }),
     prisma.customer.createMany({ data: data.customers }),
     prisma.order.createMany({ data: data.orders }),
     prisma.orderItem.createMany({ data: data.orderItems }),
+    // Los pedidos nuevos de cualquier tienda siguen numerándose después del 300 (OM-00301, …).
+    prisma.$queryRaw`SELECT setval(pg_get_serial_sequence('"Order"', 'number'), GREATEST((SELECT MAX("number") FROM "Order"), ${data.orders.length}))`,
   ]);
 
   return {
