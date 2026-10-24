@@ -4,9 +4,12 @@ import { PageHeader } from "@/components/page-header";
 import { ProductCatalog } from "@/components/products/product-catalog";
 import { buttonVariants } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
+import { requireStoreContext } from "@/server/store";
 
 export default async function ProductosPage() {
+  const { store } = await requireStoreContext();
   const products = await prisma.product.findMany({
+    where: { storeId: store.id },
     select: { id: true, sku: true, name: true, category: true, priceCents: true, costCents: true, stock: true },
     orderBy: { name: "asc" },
   });

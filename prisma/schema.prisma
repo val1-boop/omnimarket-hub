@@ -26,6 +26,7 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
+  store         Store?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -81,9 +82,25 @@ enum OrderStatus {
   CANCELLED
 }
 
+// Cada tienda tiene sus propios productos, clientes y pedidos.
+// - "Mi tienda": una por usuario (ownerId), se crea la primera vez que entra y empieza vacía.
+// - Tienda de demostración: isDemo = true, sin dueño, con los datos de prueba compartidos.
+model Store {
+  id        String     @id @default(cuid())
+  name      String
+  isDemo    Boolean    @default(false)
+  ownerId   String?    @unique
+  owner     User?      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+  products  Product[]
+  customers Customer[]
+  orders    Order[]
+}
+
 model Product {
   id         String      @id @default(cuid())
-  sku        String      @unique
+  storeId    String
+  sku        String
   name       String
   category   String
   priceCents Int
@@ -92,21 +109,29 @@ model Product {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
   orderItems OrderItem[]
+  store      Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
-  @@index([category])
+  @@unique([storeId, sku])
+  @@index([storeId, category])
 }
 
 model Customer {
   id        String   @id @default(cuid())
+  storeId   String
   name      String
-  email     String   @unique
+  email     String?
   city      String
   createdAt DateTime @default(now())
   orders    Order[]
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, email])
+  @@index([storeId, name])
 }
 
 model Order {
   id         String      @id @default(cuid())
+  storeId    String
   number     Int         @unique @default(autoincrement())
   status     OrderStatus @default(PENDING)
   position   Int         @default(0)
@@ -116,11 +141,13 @@ model Order {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
 
-  customer Customer    @relation(fields: [customerId], references: [id])
+  // NoAction (diferida en la migración): un cliente con pedidos no se puede borrar solo, pero sí junto con toda su tienda.
+  customer Customer    @relation(fields: [customerId], references: [id], onDelete: NoAction)
   items    OrderItem[]
+  store    Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
-  @@index([status, position])
-  @@index([createdAt])
+  @@index([storeId, status, position])
+  @@index([storeId, createdAt])
   @@index([customerId])
 }
 
@@ -133,7 +160,8 @@ model OrderItem {
   unitCostCents  Int
 
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id])
+  // NoAction (diferida en la migración): un producto en pedidos no se puede borrar solo, pero sí junto con toda su tienda.
+  product Product @relation(fields: [productId], references: [id], onDelete: NoAction)
 
   @@index([orderId])
   @@index([productId])

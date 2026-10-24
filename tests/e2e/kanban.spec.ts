@@ -1,11 +1,13 @@
 import { expect, test } from "@playwright/test";
-import { dragTo, resetData, signIn } from "./helpers";
+import { chooseStore, dragTo, resetData, signIn } from "./helpers";
 
 // Flujo 3: Drag & Drop — arrastrar una tarjeta y comprobar que cambió de columna.
 test.describe("Tablero (Drag & Drop)", () => {
   test.beforeEach(async ({ request, context, baseURL }) => {
     await resetData(request);
     await signIn(context, baseURL!);
+    // Estas pruebas necesitan datos: trabajan en la Tienda de demostración.
+    await chooseStore(context, baseURL!, "demo");
   });
 
   test("arrastrar un pedido a otra columna lo mueve y queda guardado", async ({ page, request }) => {

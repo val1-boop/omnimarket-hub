@@ -1,9 +1,11 @@
 "use client";
 
 import { LayoutGrid, Search } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { ProductCard, type CatalogProduct } from "@/components/products/product-card";
 import { SectionTitle } from "@/components/section-title";
+import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getCategoryIcon } from "@/lib/categories";
 import { filterProducts } from "@/lib/filters";
@@ -73,6 +75,18 @@ export function ProductCatalog({ products }: { products: CatalogProduct[] }) {
             {visible.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
+          </div>
+        ) : products.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center" data-testid="catalog-empty">
+            <p className="font-display text-sm font-bold uppercase tracking-wider text-navy-900">
+              Todavía no tienes productos
+            </p>
+            <p className="mt-1 text-sm text-slate-500">
+              Agrega lo que vendes, con su precio y lo que te cuesta, para empezar a registrar pedidos.
+            </p>
+            <Link href="/productos/nuevo" className={buttonVariants({ className: "mt-6" })}>
+              Agregar mi primer producto
+            </Link>
           </div>
         ) : (
           <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center">

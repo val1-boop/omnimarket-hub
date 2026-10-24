@@ -2,9 +2,9 @@ import type { OrderStatus } from "@prisma/client";
 import { ArrowRight, ClipboardList, Package, SquareKanban } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
-import { auth } from "@/auth";
 import { AnalyticsSection } from "@/components/analytics/analytics-section";
 import { AnalyticsSkeleton } from "@/components/analytics/analytics-skeleton";
+import { StoreSwitchButton } from "@/components/layout/store-switch-button";
 import { PeriodFilter } from "@/components/analytics/period-filter";
 import { SectionTitle } from "@/components/section-title";
 import { buttonVariants } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { parsePeriod } from "@/lib/analytics";
 import { formatNumber } from "@/lib/format";
 import { ORDER_STATUS_LABELS } from "@/lib/order-status";
 import { prisma } from "@/lib/prisma";
+import { requireStoreContext } from "@/server/store";
 import { cn } from "@/lib/utils";
 
 // El recorrido de un pedido, en el orden en que avanza.
@@ -50,15 +51,19 @@ type DashboardPageProps = {
 
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const period = parsePeriod((await searchParams).periodo);
-  const [session, statusCounts] = await Promise.all([
-    auth(),
-    prisma.order.groupBy({ by: ["status"], _count: { _all: true } }),
+  const { user, store } = await requireStoreContext();
+  const [statusCounts, productCount] = await Promise.all([
+    prisma.order.groupBy({ by: ["status"], where: { storeId: store.id }, _count: { _all: true } }),
+    prisma.product.count({ where: { storeId: store.id } }),
   ]);
 
-  const firstName = session?.user?.name?.split(" ")[0];
+  const firstName = user.name?.split(" ")[0];
   const countByStatus = new Map(statusCounts.map((row) => [row.status, row._count._all]));
   const countOf = (status: OrderStatus) => countByStatus.get(status) ?? 0;
   const onTheWay = countOf("PENDING") + countOf("PROCESSING") + countOf("SHIPPED");
+  const orderCount = statusCounts.reduce((sum, row) => sum + row._count._all, 0);
+  // Tienda recién creada (o sin pedidos todavía): en vez de cifras, se muestra cómo empezar.
+  const isEmpty = orderCount === 0;
 
   return (
     <div className="space-y-10">
@@ -69,23 +74,54 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             {firstName ? `¡Hola, ${firstName}!` : "¡Hola!"}
           </p>
           <h1 className="mt-4 font-display text-4xl font-extrabold uppercase leading-tight text-navy-900 md:text-5xl">
-            Así va
+            {isEmpty ? "Tu tienda" : "Así va"}
             <br />
-            tu tienda.
+            {isEmpty ? "está lista." : "tu tienda."}
           </h1>
           <p className="mt-3 font-script text-3xl text-sand-600">de la caja a la puerta</p>
-          <p className="mt-4 max-w-md text-sm text-slate-600">
-            Ahorita tienes <strong className="text-navy-900">{formatNumber(onTheWay)} pedidos</strong> que todavía no
-            llegan a su destino. Muévelos en el tablero conforme avancen para que nadie se quede esperando.
-          </p>
+          {isEmpty ? (
+            <div data-testid="empty-store">
+              <p className="mt-4 max-w-md text-sm text-slate-600">
+                Todavía no registras pedidos, así que aún no hay ventas ni ganancias que mostrar. Tienes{" "}
+                <strong className="text-navy-900">
+                  {productCount === 1 ? "1 producto registrado" : `${formatNumber(productCount)} productos registrados`}
+                </strong>
+                . Empieza así:
+              </p>
+              <ol className="mt-3 max-w-md list-decimal space-y-1 pl-5 text-sm text-slate-600">
+                <li>Agrega los productos que vendes, con su precio y lo que te cuestan.</li>
+                <li>Registra tu primer pedido: puedes dar de alta al cliente ahí mismo.</li>
+                <li>Mueve el pedido en el tablero conforme avance.</li>
+              </ol>
+            </div>
+          ) : (
+            <p className="mt-4 max-w-md text-sm text-slate-600">
+              Ahorita tienes <strong className="text-navy-900">{formatNumber(onTheWay)} pedidos</strong> que todavía no
+              llegan a su destino. Muévelos en el tablero conforme avancen para que nadie se quede esperando.
+            </p>
+          )}
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/kanban" className={buttonVariants()}>
-              Abrir tablero
-              <ArrowRight aria-hidden="true" />
-            </Link>
-            <Link href="/pedidos" className={buttonVariants({ variant: "outline" })}>
-              Ver pedidos
-            </Link>
+            {isEmpty ? (
+              <>
+                <Link href={productCount === 0 ? "/productos/nuevo" : "/pedidos/nuevo"} className={buttonVariants()}>
+                  {productCount === 0 ? "Agregar mi primer producto" : "Registrar mi primer pedido"}
+                  <ArrowRight aria-hidden="true" />
+                </Link>
+                {!store.isDemo && (
+                  <StoreSwitchButton to="demo" label="Explorar la tienda de demostración" />
+                )}
+              </>
+            ) : (
+              <>
+                <Link href="/kanban" className={buttonVariants()}>
+                  Abrir tablero
+                  <ArrowRight aria-hidden="true" />
+                </Link>
+                <Link href="/pedidos" className={buttonVariants({ variant: "outline" })}>
+                  Ver pedidos
+                </Link>
+              </>
+            )}
           </div>
         </div>
 
@@ -122,7 +158,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           <PeriodFilter period={period} />
         </div>
         <Suspense key={period} fallback={<AnalyticsSkeleton />}>
-          <AnalyticsSection period={period} />
+          <AnalyticsSection period={period} storeId={store.id} />
         </Suspense>
       </section>
 

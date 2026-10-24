@@ -1,11 +1,13 @@
 import { expect, test } from "@playwright/test";
-import { resetData, signIn } from "./helpers";
+import { chooseStore, resetData, signIn } from "./helpers";
 
 // Detalles de experiencia: páginas "no encontrado", formularios que llegan llenos y campos con nombre.
 test.describe("Experiencia de uso", () => {
   test.beforeEach(async ({ request, context, baseURL }) => {
     await resetData(request);
     await signIn(context, baseURL!);
+    // Estas pruebas necesitan datos: trabajan en la Tienda de demostración.
+    await chooseStore(context, baseURL!, "demo");
   });
 
   test("un producto que no existe muestra un aviso en español con flecha para regresar", async ({ page }) => {

@@ -8,6 +8,7 @@ import { useState, type ReactNode } from "react";
 import { Logo } from "@/components/brand/logo";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { StoreBar, type ActiveStore } from "@/components/layout/store-bar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { signOutAction } from "@/server/actions/auth";
@@ -29,7 +30,9 @@ function UserAvatar({ user }: { user: AppShellUser }) {
   );
 }
 
-export function AppShell({ user, children }: { user: AppShellUser; children: ReactNode }) {
+type AppShellProps = { user: AppShellUser; store: ActiveStore; children: ReactNode };
+
+export function AppShell({ user, store, children }: AppShellProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -121,6 +124,8 @@ export function AppShell({ user, children }: { user: AppShellUser; children: Rea
           </div>
         )}
       </header>
+
+      <StoreBar store={store} />
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 md:px-8">{children}</main>
 

@@ -10,6 +10,9 @@ type LoginPageProps = {
 
 const ERROR_MESSAGES: Record<string, string> = {
   AccessDenied: "No pudimos dejarte entrar con esa cuenta. Prueba con otra.",
+  OAuthAccountNotLinked:
+    "Ya tienes una cuenta con ese correo, pero la abriste con el otro botón (Google o GitHub). Entra con el mismo que usaste la primera vez.",
+  OAuthCallbackError: "Google o GitHub no terminaron de iniciar tu sesión. Inténtalo otra vez.",
 };
 
 const HIGHLIGHTS = [

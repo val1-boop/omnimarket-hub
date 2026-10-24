@@ -2,17 +2,21 @@ import { averageTicketFromTotals, calculateMargin } from "@/lib/finance";
 import { formatCurrency, formatOrderNumber } from "@/lib/format";
 import { ORDER_STATUS_LABELS, ORDER_STATUSES } from "@/lib/order-status";
 import { prisma } from "@/lib/prisma";
+import { DEMO_STORE_ID } from "@/lib/stores";
 
+// Los endpoints de auditoría son públicos: SOLO leen la tienda de demostración, nunca datos privados.
+const DEMO = { storeId: DEMO_STORE_ID };
 // Los pedidos cancelados no cuentan como venta.
-const SOLD = { status: { not: "CANCELLED" as const } };
+const SOLD = { ...DEMO, status: { not: "CANCELLED" as const } };
 
 /** Métricas de ventas generales + una página de pedidos con su ganancia. */
 export async function getAnalyticsPage({ page, limit }: { page: number; limit: number }) {
   const [totals, statusCounts, totalOrders, orders] = await Promise.all([
     prisma.order.aggregate({ where: SOLD, _sum: { totalCents: true, costCents: true }, _count: { _all: true } }),
-    prisma.order.groupBy({ by: ["status"], _count: { _all: true } }),
-    prisma.order.count(),
+    prisma.order.groupBy({ by: ["status"], where: DEMO, _count: { _all: true } }),
+    prisma.order.count({ where: DEMO }),
     prisma.order.findMany({
+      where: DEMO,
       orderBy: [{ createdAt: "desc" }, { number: "desc" }],
       skip: (page - 1) * limit,
       take: limit,
@@ -101,17 +105,17 @@ function toKanbanItem(order: KanbanOrder) {
   };
 }
 
-/** Estado actual de un pedido en el tablero (por número o por id). */
+/** Estado actual de un pedido de la tienda de demostración (por número o por id). */
 export async function getKanbanOrderStatus(where: { number: number } | { id: string }) {
-  const order = await prisma.order.findUnique({ where, select: kanbanOrderSelect });
+  const order = await prisma.order.findFirst({ where: { ...where, ...DEMO }, select: kanbanOrderSelect });
   return order ? toKanbanItem(order) : null;
 }
 
 /** Resumen del tablero: cuántos pedidos hay en cada columna y los últimos movidos. */
 export async function getKanbanSummary() {
   const [counts, recent] = await Promise.all([
-    prisma.order.groupBy({ by: ["status"], _count: { _all: true } }),
-    prisma.order.findMany({ orderBy: { updatedAt: "desc" }, take: 5, select: kanbanOrderSelect }),
+    prisma.order.groupBy({ by: ["status"], where: DEMO, _count: { _all: true } }),
+    prisma.order.findMany({ where: DEMO, orderBy: { updatedAt: "desc" }, take: 5, select: kanbanOrderSelect }),
   ]);
   const totals = new Map(counts.map((row) => [row.status, row._count._all]));
 
