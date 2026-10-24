@@ -1,21 +1,18 @@
+import { KanbanBoard } from "@/components/kanban/kanban-board";
 import { PageHeader } from "@/components/page-header";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getKanbanBoard } from "@/server/queries/kanban";
 
-export default function KanbanPage() {
+export default async function KanbanPage() {
+  const board = await getKanbanBoard();
+
   return (
     <>
       <PageHeader
         eyebrow="Tus envíos"
         title="Tablero"
-        description="Cada columna es un paso del camino. Arrastra un pedido a la siguiente cuando avance."
+        description="Arrastra cada pedido a la columna del paso en el que va, o usa el botón “Pasar a…” de la tarjeta."
       />
-      <Card>
-        <CardHeader>
-          <CardTitle>Estamos armando esta sección</CardTitle>
-          <CardDescription>Muy pronto vas a poder mover tus pedidos de una columna a otra.</CardDescription>
-        </CardHeader>
-        <CardContent />
-      </Card>
+      <KanbanBoard initialBoard={board} />
     </>
   );
 }

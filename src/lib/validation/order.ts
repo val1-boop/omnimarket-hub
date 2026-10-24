@@ -35,5 +35,13 @@ export const bulkUpdateSchema = z.object({
 
 export const bulkDeleteSchema = z.object({ ids: orderIdsSchema });
 
+
+export const moveOrderSchema = z.object({
+  id: z.string().min(1, "Falta el pedido"),
+  status: z.enum(ORDER_STATUSES, { error: "Ese paso no existe" }),
+});
+
 export type OrderInput = z.infer<typeof orderSchema>;
 export type BulkUpdateInput = z.infer<typeof bulkUpdateSchema>;
+
+export type MoveOrderInput = z.infer<typeof moveOrderSchema>;

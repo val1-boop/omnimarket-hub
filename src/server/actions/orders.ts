@@ -4,8 +4,7 @@ import { revalidatePath } from "next/cache";
 import type { ActionResult } from "@/lib/action-result";
 import { calculateOrderTotals } from "@/lib/finance";
 import { prisma } from "@/lib/prisma";
-import { bulkDeleteSchema, bulkUpdateSchema, orderSchema } from "@/lib/validation/order";
-import { getSessionUser, SESSION_EXPIRED_MESSAGE } from "@/server/auth-guard";
+import { bulkDeleteSchema, bulkUpdateSchema, moveOrderSchema, orderSchema } from "@/lib/validation/order";import { getSessionUser, SESSION_EXPIRED_MESSAGE } from "@/server/auth-guard";
 
 function revalidateOrders() {
   revalidatePath("/pedidos");
@@ -90,5 +89,27 @@ export async function bulkDeleteOrders(input: unknown): Promise<ActionResult<{ c
     return { ok: true, data: { count } };
   } catch {
     return { ok: false, message: "No pudimos borrar los pedidos." };
+  }
+}
+
+
+// Mueve un pedido a otro paso desde el tablero. Al cambiar, se actualiza su fecha de
+// modificación y por eso queda hasta arriba de la columna nueva.
+export async function moveOrder(input: unknown): Promise<ActionResult<{ number: number }>> {
+  if (!(await getSessionUser())) return { ok: false, message: SESSION_EXPIRED_MESSAGE };
+
+  const parsed = moveOrderSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0].message };
+
+  try {
+    const order = await prisma.order.update({
+      where: { id: parsed.data.id },
+      data: { status: parsed.data.status },
+      select: { number: true },
+    });
+    revalidateOrders();
+    return { ok: true, data: { number: order.number } };
+  } catch {
+    return { ok: false, message: "No pudimos mover el pedido." };
   }
 }
