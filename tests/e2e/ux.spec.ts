@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { chooseStore, resetData, signIn } from "./helpers";
+import { chooseStore, deleteTestUser, OTHER_USER, resetData, signIn } from "./helpers";
 
 // Detalles de experiencia: páginas "no encontrado", formularios que llegan llenos y campos con nombre.
 test.describe("Experiencia de uso", () => {
@@ -41,5 +41,29 @@ test.describe("Experiencia de uso", () => {
       (fields) => (fields as HTMLInputElement[]).filter((field) => !field.id && !field.name).length,
     );
     expect(unnamed).toBe(0);
+  });
+
+  test("en celular, el Inicio de una tienda nueva cabe en la pantalla", async ({ page, context, baseURL }) => {
+    await deleteTestUser(OTHER_USER);
+    await signIn(context, baseURL!, OTHER_USER);
+    await chooseStore(context, baseURL!, "mia");
+
+    for (const width of [320, 360, 390]) {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto("/dashboard");
+      await expect(page.getByTestId("empty-store")).toBeVisible();
+      // Nada empuja la página más ancha que la pantalla, y los números del recorrido se ven completos.
+      const { scrollWidth, clientWidth } = await page.evaluate(() => ({
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+      }));
+      expect(scrollWidth, `ancho ${width}px`).toBeLessThanOrEqual(clientWidth);
+      for (const name of ["Agregar mi primer producto", "Explorar la tienda de demostración"]) {
+        const box = (await page.getByRole(name.startsWith("Agregar") ? "link" : "button", { name }).boundingBox())!;
+        expect(box.x + box.width, `${name} a ${width}px`).toBeLessThanOrEqual(width);
+      }
+      const count = (await page.getByText("Por preparar", { exact: true }).locator("..").boundingBox())!;
+      expect(count.x + count.width, `recorrido a ${width}px`).toBeLessThanOrEqual(width);
+    }
   });
 });

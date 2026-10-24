@@ -13,11 +13,12 @@ type StoreSwitchButtonProps = {
   label: string;
   variant?: "default" | "outline";
   size?: "default" | "sm";
+  className?: string;
 };
 
 // Cambia de tienda y recarga la página completa: todo (encabezado, números, tablas) se vuelve a
 // pedir al servidor ya con la tienda nueva, sin mezclar nada de la anterior.
-export function StoreSwitchButton({ to, label, variant = "outline", size = "default" }: StoreSwitchButtonProps) {
+export function StoreSwitchButton({ to, label, variant = "outline", size = "default", className }: StoreSwitchButtonProps) {
   const [pending, startTransition] = useTransition();
 
   const onClick = () =>
@@ -31,7 +32,7 @@ export function StoreSwitchButton({ to, label, variant = "outline", size = "defa
     });
 
   return (
-    <Button type="button" variant={variant} size={size} onClick={onClick} disabled={pending}>
+    <Button type="button" variant={variant} size={size} className={className} onClick={onClick} disabled={pending}>
       {pending ? <SavingSkeleton className="w-28 bg-slate-300" label="Cambiando de tienda…" /> : label}
     </Button>
   );
