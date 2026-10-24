@@ -13,6 +13,14 @@ test.describe("Autenticación", () => {
     await expect(page.getByRole("button", { name: "Continuar con GitHub" })).toBeVisible();
   });
 
+  test("el aviso de privacidad es público y tiene cómo regresar", async ({ page }) => {
+    await page.goto("/privacidad");
+    await expect(page).toHaveURL(/\/privacidad$/);
+    await expect(page.getByRole("heading", { name: "Aviso de privacidad" })).toBeVisible();
+    await page.getByRole("link", { name: "Volver a iniciar sesión" }).click();
+    await expect(page).toHaveURL(/\/login$/);
+  });
+
   test("los botones de Google y GitHub inician OAuth con la dirección de regreso correcta", async ({ page }) => {
     const providers = [
       { button: "Continuar con Google", host: /accounts\.google\.com/, callback: "/api/auth/callback/google" },
