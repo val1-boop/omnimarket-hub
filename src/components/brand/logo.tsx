@@ -18,7 +18,7 @@ export function Logo({ href = "/dashboard", inverted = false }: { href?: string;
         </span>
         <span
           className={cn(
-            "mt-1 text-[10px] font-medium uppercase tracking-[0.2em]",
+            "mt-1 whitespace-nowrap text-[10px] font-medium uppercase tracking-[0.2em]",
             inverted ? "text-slate-300" : "text-slate-500",
           )}
         >

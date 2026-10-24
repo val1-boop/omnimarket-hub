@@ -26,6 +26,12 @@ export function parseOrderFilters(params: SearchParams): OrderFilters {
   });
 }
 
+/** "OM-00042", "om42" o "42" → 42. Cualquier otro texto → null. */
+export function parseOrderNumber(text: string): number | null {
+  const match = text.trim().match(/^(?:om-?)?0*(\d{1,9})$/i);
+  return match ? Number(match[1]) : null;
+}
+
 /** Convierte los filtros en la condición de búsqueda de la base de datos. */
 export function buildOrderWhere(filters: Pick<OrderFilters, "q" | "status">): Prisma.OrderWhereInput {
   const where: Prisma.OrderWhereInput = {};
@@ -33,11 +39,12 @@ export function buildOrderWhere(filters: Pick<OrderFilters, "q" | "status">): Pr
 
   const query = filters.q.trim();
   if (query) {
-    // "OM-00042", "om42" o "42" buscan por número de pedido; cualquier otra cosa, por nombre del cliente.
-    const numberMatch = query.match(/^(?:om-?)?0*(\d{1,9})$/i);
-    where.OR = numberMatch
-      ? [{ number: Number(numberMatch[1]) }]
-      : [{ customer: { name: { contains: query, mode: "insensitive" } } }];
+    // Un número de pedido busca ese pedido; cualquier otro texto busca por nombre del cliente.
+    const orderNumber = parseOrderNumber(query);
+    where.OR =
+      orderNumber !== null
+        ? [{ number: orderNumber }]
+        : [{ customer: { name: { contains: query, mode: "insensitive" } } }];
   }
   return where;
 }
