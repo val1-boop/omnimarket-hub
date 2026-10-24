@@ -39,7 +39,7 @@ El tiempo total que muestran Postman o `curl` suma además el viaje por internet
 | Total abriendo una conexión nueva en cada petición | 0.43–1.6 s (incluye abrir la conexión cifrada) |
 
 - Las funciones corren en `iad1` (Washington D.C.), la misma región que la base de datos.
-- Si la app pasa un rato sin uso, Vercel la "apaga" y la siguiente petición tarda más; se llegaron a medir ~300 ms de servidor. Para evitarlo, el flujo **Mantener activa la app** (`.github/workflows/mantener-activa.yml`) la visita cada 5 minutos.
+- Si la app pasa un rato sin uso, Vercel la "apaga" y la siguiente petición tarda más; se llegaron a medir ~300 ms de servidor. Para evitarlo, el flujo **Mantener activa la app** (`.github/workflows/mantener-activa.yml`) la visita cada 15 minutos (GitHub puede retrasar o saltarse alguna visita).
 - Para medir varias veces con la misma conexión:
   ```bash
   u="https://omnimarket-hub-brown.vercel.app/api/test/analytics?page=1&limit=50"
@@ -121,7 +121,7 @@ Antes de cada prueba se llama a `POST /api/test/reset-data`.
 ### Pipeline (`.github/workflows/ci.yml`)
 - **En cada Pull Request:** instalar → migraciones en una base PostgreSQL desechable → lint → revisión de tipos → pruebas unitarias → build → pruebas E2E. Si algo falla, GitHub no deja aceptar el Pull Request.
 - **En `main`:** lo mismo y, **solo si pasa**, migraciones en producción → `vercel build` → `vercel deploy --prebuilt --prod` → comprobación de que producción responde.
-- **Cada 5 minutos** (`.github/workflows/mantener-activa.yml`): visita producción para que no se "duerma" y deja anotado el tiempo de cada respuesta. Solo lee datos.
+- **Cada 15 minutos** (`.github/workflows/mantener-activa.yml`): visita producción para que no se "duerma" y deja anotado el tiempo de cada respuesta. Solo lee datos.
 
 ---
 
