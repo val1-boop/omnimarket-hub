@@ -12,15 +12,21 @@ type StatTileProps = {
    */
   change?: number | null;
   period: number;
+  /** Posición en la fila: cada tarjeta aparece un poquito después que la anterior. */
+  index?: number;
 };
 
-export function StatTile({ label, value, detail, change, period }: StatTileProps) {
+export function StatTile({ label, value, detail, change, period, index = 0 }: StatTileProps) {
   const comparison = `vs los ${period} días anteriores`;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5" data-testid="stat-tile">
+    <div
+      className="animate-rise rounded-2xl border border-slate-200/80 bg-white p-5"
+      style={{ animationDelay: `${index * 70}ms` }}
+      data-testid="stat-tile"
+    >
       <p className="text-sm text-slate-500">{label}</p>
-      <p className="mt-2 font-display text-2xl font-extrabold text-navy-900">{value}</p>
+      <p className="mt-2 font-display text-2xl font-extrabold text-ink-900">{value}</p>
       {detail && <p className="text-xs text-slate-500">{detail}</p>}
       {change !== undefined && (
         <p className="mt-3 flex items-center gap-1 text-xs">

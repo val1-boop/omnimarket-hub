@@ -18,7 +18,7 @@ export function FormPageSkeleton({ fields = 4 }: { fields?: number }) {
             </div>
           ))}
         </div>
-        <div className="h-fit space-y-4 rounded-xl border border-slate-200 bg-sand-50 p-6">
+        <div className="h-fit space-y-4 rounded-xl border border-slate-200 bg-lilac-50 p-6">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-8 w-full" />
           <Skeleton className="h-11 w-full" />

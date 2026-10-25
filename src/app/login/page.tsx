@@ -40,37 +40,46 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <main className="grid min-h-screen lg:grid-cols-2">
       {/* Panel de marca */}
-      <section className="hidden flex-col justify-between bg-navy-900 p-12 text-white lg:flex">
-        <Logo href="/login" inverted />
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sand-200">OmniMarket</p>
-          <h1 className="mt-4 font-display text-5xl font-extrabold uppercase leading-tight">
+      <section className="relative hidden flex-col justify-between overflow-hidden bg-ink-900 p-12 text-white lg:flex">
+        {/* Brillos decorativos de fondo */}
+        <div aria-hidden="true" className="pointer-events-none absolute -left-32 top-1/3 h-96 w-96 rounded-full bg-lilac-600/40 blur-3xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 right-0 h-72 w-72 rounded-full bg-fuchsia-500/20 blur-3xl" />
+        <div className="relative">
+          <Logo href="/login" inverted />
+        </div>
+        <div className="relative">
+          <h1 className="font-display text-5xl font-extrabold leading-[1.05] tracking-tight">
             Cada pedido,
             <br />
             de la caja
-            <br />a la puerta.
+            <br />
+            <span className="bg-gradient-to-r from-lilac-300 to-fuchsia-300 bg-clip-text text-transparent">a la puerta.</span>
           </h1>
-          <p className="mt-3 font-script text-3xl text-sand-200">sin perderle la pista a ninguno</p>
-          <ul className="mt-10 space-y-4">
+          <p className="mt-4 max-w-md text-lg text-slate-300">Sin perderle la pista a ninguno.</p>
+          <ul className="mt-10 space-y-3">
             {HIGHLIGHTS.map(({ icon: Icon, text }) => (
-              <li key={text} className="flex items-center gap-3 text-sm text-slate-200">
-                <Icon className="h-5 w-5 text-sand-200" strokeWidth={1.5} aria-hidden="true" />
+              <li key={text} className="flex items-center gap-3 rounded-2xl bg-white/5 px-4 py-3 text-sm text-slate-200 ring-1 ring-white/10">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-lima-300 text-ink-900">
+                  <Icon className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
+                </span>
                 {text}
               </li>
             ))}
           </ul>
         </div>
-        <p className="text-xs text-slate-400">© {new Date().getFullYear()} OmniMarket · Proyecto escolar</p>
+        <p className="relative text-xs text-slate-400">© {new Date().getFullYear()} OmniMarket · Proyecto escolar</p>
       </section>
 
       {/* Formulario */}
-      <section className="flex items-center justify-center bg-sand-50 p-6">
+      <section className="flex items-center justify-center bg-gradient-to-br from-lilac-100 via-lilac-50 to-white p-6">
         <div className="w-full max-w-sm">
           <div className="mb-10 lg:hidden">
             <Logo href="/login" />
           </div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sand-700">¡Qué gusto verte!</p>
-          <h2 className="mt-1 font-display text-3xl font-extrabold uppercase text-navy-900">Entra a tu tienda</h2>
+          <p className="inline-flex rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-lilac-700 ring-1 ring-lilac-200">
+            ¡Qué gusto verte!
+          </p>
+          <h2 className="mt-4 font-display text-3xl font-extrabold tracking-tight text-ink-900">Entra a tu tienda</h2>
           <p className="mt-2 text-sm text-slate-600">
             Usa tu cuenta de Google o de GitHub. No necesitas crear una contraseña nueva.
           </p>
@@ -113,7 +122,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
           <p className="mt-8 text-xs text-slate-500">
             Para entrar usamos tu nombre, correo y foto de Google o GitHub. Te explicamos todo en el{" "}
-            <Link href="/privacidad" className="underline hover:text-navy-900">
+            <Link href="/privacidad" className="underline hover:text-ink-900">
               aviso de privacidad
             </Link>
             .

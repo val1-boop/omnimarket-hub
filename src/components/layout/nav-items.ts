@@ -4,4 +4,5 @@ export const NAV_ITEMS = [
   { href: "/pedidos", label: "Pedidos" },
   { href: "/kanban", label: "Tablero" },
   { href: "/productos", label: "Productos" },
+  { href: "/clientes", label: "Clientes" },
 ];

@@ -16,7 +16,7 @@ export default async function NuevoPedidoPage() {
     }),
     prisma.product.findMany({
       where: { storeId: store.id },
-      select: { id: true, name: true, priceCents: true, costCents: true },
+      select: { id: true, name: true, priceCents: true, costCents: true, stock: true },
       orderBy: { name: "asc" },
     }),
   ]);
@@ -32,7 +32,7 @@ export default async function NuevoPedidoPage() {
       {products.length === 0 ? (
         // Sin productos no se puede armar un pedido: primero hay que registrar alguno.
         <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center" data-testid="order-needs-products">
-          <p className="font-display text-sm font-bold uppercase tracking-wider text-navy-900">
+          <p className="font-display text-base font-bold text-ink-900">
             Primero agrega un producto
           </p>
           <p className="mt-1 text-sm text-slate-500">Un pedido necesita al menos un producto de tu catálogo.</p>

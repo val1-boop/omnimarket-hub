@@ -35,13 +35,13 @@ export function ProductCatalog({ products }: { products: CatalogProduct[] }) {
                 onClick={() => setCategory(item)}
                 aria-pressed={active}
                 className={cn(
-                  "flex flex-col items-center gap-2 rounded-xl px-3 py-5 text-center transition-colors",
-                  active ? "bg-navy-900 text-white" : "bg-slate-50 text-navy-900 hover:bg-sand-100",
+                  "flex flex-col items-center gap-2 rounded-2xl px-3 py-5 text-center transition-[color,background-color,transform] active:scale-[0.97]",
+                  active ? "bg-ink-900 text-white" : "border border-slate-200/80 bg-white text-ink-900 hover:border-lilac-300 hover:bg-lilac-50",
                 )}
               >
                 <Icon className="h-8 w-8" strokeWidth={1.5} aria-hidden="true" />
                 <span className="text-sm font-semibold">{item ?? "Todas"}</span>
-                <span className={cn("text-xs", active ? "text-slate-300" : "text-slate-500")}>
+                <span className={cn("text-xs", active ? "text-lilac-300" : "text-slate-500")}>
                   {formatNumber(count)} productos
                 </span>
               </button>
@@ -52,7 +52,7 @@ export function ProductCatalog({ products }: { products: CatalogProduct[] }) {
 
       <section>
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="font-display text-sm font-bold uppercase tracking-wider text-navy-900">
+          <h2 className="font-display text-base font-bold text-ink-900">
             {category ?? "Todos los productos"} <span className="text-slate-400">({formatNumber(visible.length)})</span>
           </h2>
           <div className="relative sm:w-72">
@@ -78,7 +78,7 @@ export function ProductCatalog({ products }: { products: CatalogProduct[] }) {
           </div>
         ) : products.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center" data-testid="catalog-empty">
-            <p className="font-display text-sm font-bold uppercase tracking-wider text-navy-900">
+            <p className="font-display text-base font-bold text-ink-900">
               Todavía no tienes productos
             </p>
             <p className="mt-1 text-sm text-slate-500">
@@ -90,7 +90,7 @@ export function ProductCatalog({ products }: { products: CatalogProduct[] }) {
           </div>
         ) : (
           <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center">
-            <p className="font-display text-sm font-bold uppercase tracking-wider text-navy-900">Nada por aquí</p>
+            <p className="font-display text-base font-bold text-ink-900">Nada por aquí</p>
             <p className="mt-1 text-sm text-slate-500">
               No encontramos productos{query ? ` con “${query}”` : ""}. Prueba con otra palabra o categoría.
             </p>

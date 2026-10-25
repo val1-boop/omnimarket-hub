@@ -26,9 +26,9 @@ export default async function NotFound() {
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 md:px-8">
         <BackLink href={back.href}>{back.label}</BackLink>
-        <div className="rounded-2xl bg-sand-50 p-10 text-center">
-          <p className="font-script text-3xl text-sand-600">¡Ups!</p>
-          <h1 className="mt-2 font-display text-2xl font-extrabold uppercase text-navy-900">Esta página no existe</h1>
+        <div className="rounded-2xl bg-lilac-50 p-10 text-center">
+          <p className="text-gradient font-display text-3xl font-extrabold">¡Ups!</p>
+          <h1 className="mt-2 font-display text-2xl font-extrabold tracking-tight text-ink-900">Esta página no existe</h1>
           <p className="mt-3 text-sm text-slate-600">
             Puede que la dirección esté mal escrita o que la página ya no esté. Regresa y sigue desde ahí.
           </p>

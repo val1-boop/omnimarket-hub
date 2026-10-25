@@ -26,12 +26,12 @@ export function KanbanColumn({ column, step, children }: KanbanColumnProps) {
       data-testid={`kanban-column-${column.status}`}
       aria-label={`${label}: ${column.total} pedidos`}
       className={cn(
-        "flex min-w-56 flex-1 flex-col rounded-2xl bg-slate-50 p-3 transition-colors",
-        isOver && "bg-sand-100 ring-2 ring-sand-500",
+        "flex min-w-56 flex-1 flex-col rounded-2xl bg-lilac-50/70 p-3 ring-1 ring-lilac-100 transition-colors",
+        isOver && "bg-lilac-100 ring-2 ring-lilac-500",
       )}
     >
       <header className="mb-3 flex items-center justify-between gap-2 px-1">
-        <h2 className="font-display text-xs font-bold uppercase tracking-wider text-navy-900">
+        <h2 className="font-display text-xs font-bold uppercase tracking-wider text-ink-900">
           {step}. {label}
         </h2>
         <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", ORDER_STATUS_STYLES[column.status])}>
@@ -52,7 +52,7 @@ export function KanbanColumn({ column, step, children }: KanbanColumnProps) {
       {hidden > 0 && (
         <Link
           href={`/pedidos?status=${column.status}`}
-          className="mt-3 flex items-center justify-center gap-1 text-xs font-semibold text-navy-900 hover:text-sand-700"
+          className="mt-3 flex items-center justify-center gap-1 text-xs font-semibold text-ink-900 hover:text-lilac-700"
         >
           Ver los {formatNumber(column.total)} en Pedidos
           <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />

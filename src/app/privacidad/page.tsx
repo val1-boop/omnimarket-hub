@@ -16,7 +16,7 @@ const UPDATED_AT = "24 de octubre de 2026";
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-2">
-      <h2 className="font-display text-sm font-bold uppercase tracking-wider text-navy-900">{title}</h2>
+      <h2 className="font-display text-base font-bold text-ink-900">{title}</h2>
       {children}
     </section>
   );
@@ -39,8 +39,8 @@ export default async function PrivacidadPage() {
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 md:px-8">
         <BackLink href={back.href}>{back.label}</BackLink>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sand-700">Tus datos</p>
-        <h1 className="mt-1 font-display text-3xl font-extrabold uppercase text-navy-900">Aviso de privacidad</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-lilac-700">Tus datos</p>
+        <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight text-ink-900">Aviso de privacidad</h1>
         <p className="mt-2 text-sm text-slate-500">Última actualización: {UPDATED_AT}</p>
 
         <div className="mt-8 space-y-8 text-sm leading-relaxed text-slate-700 [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5">
@@ -52,9 +52,9 @@ export default async function PrivacidadPage() {
 
           <Section title="¿Quién es responsable de tus datos?">
             <p>
-              <strong className="text-navy-900">{RESPONSIBLE.name}</strong>, con domicilio en {RESPONSIBLE.city}.
+              <strong className="text-ink-900">{RESPONSIBLE.name}</strong>, con domicilio en {RESPONSIBLE.city}.
               Para cualquier duda sobre tus datos escribe a{" "}
-              <a className="font-medium text-navy-900 underline" href={`mailto:${RESPONSIBLE.email}`}>
+              <a className="font-medium text-ink-900 underline" href={`mailto:${RESPONSIBLE.email}`}>
                 {RESPONSIBLE.email}
               </a>
               .
@@ -78,12 +78,12 @@ export default async function PrivacidadPage() {
               datos de pago.
             </p>
             <p>
-              Además se guarda lo que tú registras en <strong className="text-navy-900">“Mi tienda”</strong>:
+              Además se guarda lo que tú registras en <strong className="text-ink-900">“Mi tienda”</strong>:
               productos, pedidos y los clientes que das de alta (solo nombre y ciudad). Solo tú lo ves. Como es un
               proyecto escolar, te pedimos no registrar datos de personas reales.
             </p>
             <p>
-              La <strong className="text-navy-900">Tienda de demostración</strong> tiene productos, clientes y pedidos
+              La <strong className="text-ink-900">Tienda de demostración</strong> tiene productos, clientes y pedidos
               inventados para la materia; no son personas reales. La comparten todos los que entran.
             </p>
           </Section>
@@ -101,16 +101,16 @@ export default async function PrivacidadPage() {
             <p>No le pasamos tus datos a nadie. Para funcionar, la app usa estos servicios que los guardan o procesan por nosotros:</p>
             <ul>
               <li>
-                <strong className="text-navy-900">Supabase</strong>: la base de datos donde se guardan, en servidores
+                <strong className="text-ink-900">Supabase</strong>: la base de datos donde se guardan, en servidores
                 ubicados en Estados Unidos.
               </li>
               <li>
-                <strong className="text-navy-900">Vercel</strong>: los servidores donde corre la app, también en
+                <strong className="text-ink-900">Vercel</strong>: los servidores donde corre la app, también en
                 Estados Unidos. Como cualquier sitio web, registran datos técnicos de las visitas, como la dirección
                 IP, para poder funcionar.
               </li>
               <li>
-                <strong className="text-navy-900">Google y GitHub</strong>: solo en el momento en que inicias sesión
+                <strong className="text-ink-900">Google y GitHub</strong>: solo en el momento en que inicias sesión
                 con ellos.
               </li>
             </ul>
@@ -131,14 +131,14 @@ export default async function PrivacidadPage() {
 
           <Section title="Tus derechos">
             <p>
-              Puedes pedir en cualquier momento <strong className="text-navy-900">ver</strong> qué datos tuyos tenemos,
-              <strong className="text-navy-900"> corregirlos</strong>, <strong className="text-navy-900">borrarlos</strong>{" "}
-              u <strong className="text-navy-900">oponerte</strong> a que los usemos (a esto la ley le llama derechos
+              Puedes pedir en cualquier momento <strong className="text-ink-900">ver</strong> qué datos tuyos tenemos,
+              <strong className="text-ink-900"> corregirlos</strong>, <strong className="text-ink-900">borrarlos</strong>{" "}
+              u <strong className="text-ink-900">oponerte</strong> a que los usemos (a esto la ley le llama derechos
               ARCO). También puedes retirar tu permiso.
             </p>
             <p>
               Solo escribe a{" "}
-              <a className="font-medium text-navy-900 underline" href={`mailto:${RESPONSIBLE.email}`}>
+              <a className="font-medium text-ink-900 underline" href={`mailto:${RESPONSIBLE.email}`}>
                 {RESPONSIBLE.email}
               </a>{" "}
               con tu nombre, el correo con el que entraste y lo que quieres hacer. Te respondemos en un máximo de 20

@@ -11,14 +11,14 @@ export function StoreBar({ store }: { store: ActiveStore }) {
       role="region"
       aria-label="Tienda activa"
       data-testid="store-bar"
-      className={cn("border-b", store.isDemo ? "border-amber-200 bg-amber-50" : "border-slate-200 bg-sand-50")}
+      className={cn("border-b", store.isDemo ? "border-amber-200 bg-amber-50" : "border-slate-200 bg-lilac-50")}
     >
       <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-2.5 text-sm sm:flex-row sm:items-center sm:justify-between md:px-8">
-        <p className="flex items-start gap-2 text-navy-900 sm:items-center">
+        <p className="flex items-start gap-2 text-ink-900 sm:items-center">
           {store.isDemo ? (
             <FlaskConical className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 sm:mt-0" aria-hidden="true" />
           ) : (
-            <Store className="mt-0.5 h-4 w-4 shrink-0 text-sand-700 sm:mt-0" aria-hidden="true" />
+            <Store className="mt-0.5 h-4 w-4 shrink-0 text-lilac-700 sm:mt-0" aria-hidden="true" />
           )}
           {store.isDemo ? (
             <span>
