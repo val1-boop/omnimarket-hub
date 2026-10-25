@@ -9,8 +9,8 @@ export const buttonVariants = cva(
       variant: {
         default: "bg-ink-900 text-white hover:bg-ink-800",
         accent: "bg-lilac-600 text-white hover:bg-lilac-700",
-        // Verde lima: solo para la acción principal de una pantalla.
-        lime: "bg-lima-300 text-ink-900 hover:bg-lima-400",
+        // Verde lima: solo para la acción principal de una pantalla. Texto oscuro en los dos modos.
+        lime: "keep-dark bg-lima-300 text-ink-900 hover:bg-lima-400",
         outline: "border border-slate-300 bg-white text-ink-900 hover:border-ink-900",
         ghost: "text-ink-900 hover:bg-lilac-100",
         destructive: "bg-rose-600 text-white hover:bg-rose-700",

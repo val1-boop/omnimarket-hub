@@ -2,6 +2,7 @@ import { ChartColumn, Layers, SquareKanban } from "lucide-react";
 import Link from "next/link";
 import { signIn } from "@/auth";
 import { Logo } from "@/components/brand/logo";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/button";
 
 type LoginPageProps = {
@@ -40,7 +41,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <main className="grid min-h-screen lg:grid-cols-2">
       {/* Panel de marca */}
-      <section className="relative hidden flex-col justify-between overflow-hidden bg-ink-900 p-12 text-white lg:flex">
+      <section className="keep-dark relative hidden flex-col justify-between overflow-hidden bg-ink-900 p-12 text-white lg:flex">
         {/* Brillos decorativos de fondo */}
         <div aria-hidden="true" className="pointer-events-none absolute -left-32 top-1/3 h-96 w-96 rounded-full bg-lilac-600/40 blur-3xl" />
         <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 right-0 h-72 w-72 rounded-full bg-fuchsia-500/20 blur-3xl" />
@@ -71,7 +72,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       </section>
 
       {/* Formulario */}
-      <section className="flex items-center justify-center bg-gradient-to-br from-lilac-100 via-lilac-50 to-white p-6">
+      <section className="relative flex items-center justify-center bg-gradient-to-br from-lilac-100 via-lilac-50 to-white p-6">
+        <ThemeToggle className="absolute right-4 top-4" />
         <div className="w-full max-w-sm">
           <div className="mb-10 lg:hidden">
             <Logo href="/login" />

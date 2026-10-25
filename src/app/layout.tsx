@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Montserrat } from "next/font/google";
 import { Providers } from "@/components/providers";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
 // Geist: texto general · Montserrat: títulos.
@@ -28,7 +29,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    // suppressHydrationWarning: el script de abajo pone data-theme antes de que React cargue.
+    <html lang="es" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className={`${geistSans.variable} ${montserrat.variable} font-sans`}>
         <Providers>{children}</Providers>
       </body>

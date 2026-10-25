@@ -18,12 +18,17 @@
   --color-lima-400: #c2e534;
   /* Color de las gráficas: violeta de la marca, revisado para daltonismo y contraste. */
   --color-chart-1: #5b47d6;
+  /* Fondo de la página (detrás de las tarjetas). */
+  --color-page: #fbfaff;
 
   /* Animaciones de la app (ver abajo: se apagan si la persona pidió menos movimiento). */
   --animate-rise: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   --animate-grow: grow 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   --animate-flash: flash 1.6s ease-out;
 }
+
+/* El modo oscuro se activa con data-theme="dark" en <html> (botón del encabezado). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme inline {
   --font-sans: var(--font-geist-sans);
@@ -53,13 +58,82 @@
   }
 }
 
-/* La app usa siempre tema claro, aunque Windows o el navegador estén en modo oscuro. */
-html {
+/*
+ * Modo oscuro: en lugar de repetir cada color en cada pantalla, se cambian los colores base.
+ * Los textos oscuros pasan a claros, las superficies blancas a tinta y los botones oscuros a claros.
+ * Todos los pares de texto y fondo se revisaron con contraste WCAG AA (4.5:1 o más).
+ */
+:root {
   color-scheme: light;
 }
 
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-page: #0d0b1f;
+  --color-white: #17142e;
+  --color-ink-950: #05040c;
+  --color-ink-900: #f1effa;
+  --color-ink-800: #d9d5f0;
+  --color-ink-700: #bdb7e0;
+  --color-lilac-50: #1e1940;
+  --color-lilac-100: #28215a;
+  --color-lilac-200: #3a3080;
+  --color-lilac-300: #b9b0f5;
+  --color-lilac-500: #8b7af2;
+  --color-lilac-600: #8b7af2;
+  --color-lilac-700: #c4bcfa;
+  --color-slate-50: #1c1838;
+  --color-slate-100: #241f44;
+  --color-slate-200: #2f2954;
+  --color-slate-300: #3d3666;
+  --color-slate-400: #8a84a8;
+  --color-slate-500: #a29dbd;
+  --color-slate-600: #bcb7d4;
+  --color-slate-700: #d4d0e8;
+  --color-slate-900: #f1effa;
+  /* Gráficas: violeta más claro, revisado contra el fondo oscuro de las tarjetas. */
+  --color-chart-1: #8b7af2;
+  /* Avisos y estados de los pedidos: fondos oscuros con texto claro del mismo color. */
+  --color-amber-50: #241c08;
+  --color-amber-100: #3a2c0b;
+  --color-amber-200: #5a4413;
+  --color-amber-700: #fbbf24;
+  --color-amber-800: #fcd34d;
+  --color-amber-900: #fde68a;
+  --color-rose-50: #2d0f1a;
+  --color-rose-100: #42152a;
+  --color-rose-200: #5c1d38;
+  --color-rose-500: #fb7185;
+  --color-rose-600: #fb7185;
+  --color-rose-700: #fda4af;
+  --color-rose-800: #fecdd3;
+  --color-emerald-50: #062a1f;
+  --color-emerald-100: #0b3a2a;
+  --color-emerald-700: #34d399;
+  --color-emerald-800: #6ee7b7;
+  --color-sky-100: #0c2d44;
+  --color-sky-800: #7dd3fc;
+  --color-indigo-100: #1e1b4b;
+  --color-indigo-800: #a5b4fc;
+}
+
+/*
+ * Partes que son oscuras en los dos modos (pie de página, franja de resumen, panel del login,
+ * logotipo): dentro de ellas se regresan los colores del modo claro para que se vean igual.
+ */
+:root[data-theme="dark"] .keep-dark {
+  --color-white: #ffffff;
+  --color-ink-900: #17132f;
+  --color-ink-800: #262050;
+  --color-lilac-300: #b9b0f5;
+  --color-lilac-600: #5b47d6;
+  --color-slate-200: oklch(92.9% 0.013 255.508);
+  --color-slate-300: oklch(86.9% 0.022 252.894);
+  --color-slate-400: oklch(70.4% 0.04 256.788);
+}
+
 body {
-  @apply bg-[#fbfaff] text-slate-900 antialiased;
+  @apply bg-page text-slate-900 antialiased;
 }
 
 /* Palabra destacada de los títulos, con degradado violeta. */
