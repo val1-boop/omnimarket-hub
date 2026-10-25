@@ -3,8 +3,8 @@
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { getCategoryIcon } from "@/lib/categories";
 import { formatCurrency, formatNumber } from "@/lib/format";
+import { ProductVisual } from "@/components/products/product-visual";
 import { StockBadge } from "@/components/products/stock-badge";
 
 export type TopProduct = {
@@ -13,6 +13,7 @@ export type TopProduct = {
   category: string;
   priceCents: number;
   stock: number;
+  imageUrl: string | null;
   pieces: number;
   revenueCents: number;
 };
@@ -67,7 +68,6 @@ export function TopProductsCarousel({ products }: { products: TopProduct[] }) {
 
       <ul ref={trackRef} className="snap-carousel -mx-4 flex gap-4 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
         {products.map((product, index) => {
-          const Icon = getCategoryIcon(product.category);
           return (
             <li
               key={product.id}
@@ -79,11 +79,14 @@ export function TopProductsCarousel({ products }: { products: TopProduct[] }) {
                 href={`/productos/${product.id}`}
                 className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-lilac-200/60"
               >
-                <div className="relative flex h-32 items-center justify-center bg-gradient-to-br from-lilac-100 via-lilac-50 to-white">
-                  <Icon
-                    className="h-12 w-12 text-ink-900 transition-transform duration-300 group-hover:scale-110"
-                    strokeWidth={1.25}
-                    aria-hidden="true"
+                <div className="relative">
+                  <ProductVisual
+                    name={product.name}
+                    category={product.category}
+                    imageUrl={product.imageUrl}
+                    className="h-36"
+                    iconClassName="h-12 w-12 transition-transform duration-300 group-hover:scale-110"
+                    sizes="(min-width: 1024px) 300px, (min-width: 640px) 45vw, 78vw"
                   />
                   <span className="absolute left-3 top-3 rounded-full bg-ink-900 px-2.5 py-1 text-[11px] font-bold text-white">
                     #{index + 1}

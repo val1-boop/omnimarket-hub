@@ -14,16 +14,24 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Field } from "@/components/ui/field";
 import { Input, Select } from "@/components/ui/input";
 import { SavingSkeleton } from "@/components/ui/skeleton";
+import { ProductPhotoField } from "@/components/products/product-photo-field";
 import { calculateMargin, pesosToCents } from "@/lib/finance";
 import { formatCurrency, formatPercent } from "@/lib/format";
+import { resizeImage } from "@/lib/resize-image";
 import { runAction } from "@/lib/run-action";
 import { PRODUCT_CATEGORIES, productSchema, type ProductInput } from "@/lib/validation/product";
-import { createProduct, deleteProduct, updateProduct } from "@/server/actions/products";
+import { createProduct, deleteProduct, removeProductImage, updateProduct, uploadProductImage } from "@/server/actions/products";
 
 type ProductFormProps = {
   /** Si viene un producto, el formulario edita; si no, crea uno nuevo. */
-  product?: ProductInput & { id: string };
+  product?: ProductInput & { id: string; imageUrl: string | null };
 };
+
+function uploadPhoto(id: string, photo: Blob) {
+  const formData = new FormData();
+  formData.append("foto", photo, "foto");
+  return runAction(() => uploadProductImage(id, formData), "No pudimos subir la foto. Revisa tu conexión.");
+}
 
 export function ProductForm({ product }: ProductFormProps) {
   const router = useRouter();
@@ -42,16 +50,28 @@ export function ProductForm({ product }: ProductFormProps) {
   });
 
   // Vista previa de cuánto le ganas, mientras escribes.
-  const [price, cost] = useWatch({ control, name: ["price", "cost"] });
+  const [price, cost, name, category] = useWatch({ control, name: ["price", "cost", "name", "category"] });
+  // Al crear, la foto elegida espera aquí y se sube en cuanto se guarda el producto.
+  const [pendingPhoto, setPendingPhoto] = useState<Blob | null>(null);
+  const [preparingPhoto, setPreparingPhoto] = useState(false);
   const priceCents = Number.isFinite(price) ? pesosToCents(price) : 0;
   const costCents = Number.isFinite(cost) ? pesosToCents(cost) : 0;
 
   const save = useMutation({
-    mutationFn: (values: ProductInput) =>
-      runAction(
-        () => (product ? updateProduct(product.id, values) : createProduct(values)),
-        "No pudimos guardar el producto. Revisa tu conexión.",
-      ),
+    mutationFn: async (values: ProductInput) => {
+      if (product) {
+        return runAction(() => updateProduct(product.id, values), "No pudimos guardar el producto. Revisa tu conexión.");
+      }
+      const created = await runAction(() => createProduct(values), "No pudimos guardar el producto. Revisa tu conexión.");
+      if (pendingPhoto) {
+        try {
+          await uploadPhoto(created.id, pendingPhoto);
+        } catch {
+          toast.error("El producto se guardó, pero la foto no. Ábrelo para volver a subirla.");
+        }
+      }
+      return created;
+    },
     onSuccess: ({ name }) => {
       toast.success(product ? `Guardamos los cambios de “${name}”.` : `¡Listo! Agregamos “${name}” a tu catálogo.`);
       router.push("/productos");
@@ -68,7 +88,33 @@ export function ProductForm({ product }: ProductFormProps) {
     onError: (error) => toast.error(error.message),
   });
 
-  const busy = save.isPending || remove.isPending;
+  // Al editar, la foto se guarda (o se quita) en cuanto la eliges, sin esperar a "Guardar cambios".
+  const photo = useMutation({
+    mutationFn: async (file: File | null) => {
+      if (!product) return null;
+      if (!file) return runAction(() => removeProductImage(product.id), "No pudimos quitar la foto. Revisa tu conexión.");
+      return uploadPhoto(product.id, await resizeImage(file));
+    },
+    onSuccess: (_data, file) => {
+      toast.success(file ? "Guardamos la foto." : "Quitamos la foto.");
+      router.refresh();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const pickPhoto = async (file: File) => {
+    if (product) return photo.mutate(file);
+    setPreparingPhoto(true);
+    try {
+      setPendingPhoto(await resizeImage(file));
+    } catch (error) {
+      toast.error((error as Error).message);
+    } finally {
+      setPreparingPhoto(false);
+    }
+  };
+
+  const busy = save.isPending || remove.isPending || photo.isPending || preparingPhoto;
 
   return (
     <form
@@ -79,6 +125,15 @@ export function ProductForm({ product }: ProductFormProps) {
     >
       <Card className="lg:col-span-2">
         <CardContent className="grid gap-5 sm:grid-cols-2">
+          <ProductPhotoField
+            name={name ?? ""}
+            category={category ?? ""}
+            imageUrl={product?.imageUrl ?? null}
+            pending={pendingPhoto}
+            busy={photo.isPending || preparingPhoto}
+            onPick={pickPhoto}
+            onRemove={() => (product ? photo.mutate(null) : setPendingPhoto(null))}
+          />
           <div className="sm:col-span-2">
             <Field label="Nombre del producto" htmlFor="name" error={errors.name?.message}>
               <Input id="name" placeholder="Ej. Termo de acero 750 ml" aria-invalid={Boolean(errors.name)} defaultValue={defaults.name} {...register("name")} />

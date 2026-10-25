@@ -1,6 +1,7 @@
 import { calculateChange, fillDailySeries, getPeriodRange, type AnalyticsPeriod } from "@/lib/analytics";
 import { averageTicketFromTotals, calculateMargin } from "@/lib/finance";
 import { prisma } from "@/lib/prisma";
+import { productImageUrl } from "@/lib/product-image";
 
 // Cuántos productos muestra el carrusel de "Lo más vendido".
 export const TOP_PRODUCTS = 10;
@@ -9,7 +10,16 @@ export const TOP_PRODUCTS = 10;
 const SOLD = { status: { not: "CANCELLED" as const } };
 
 type CategoryRow = { category: string; revenue: bigint; profit: bigint; pieces: bigint };
-type TopProductRow = { id: string; name: string; category: string; priceCents: number; stock: number; pieces: bigint; revenue: bigint };
+type TopProductRow = {
+  id: string;
+  name: string;
+  category: string;
+  priceCents: number;
+  stock: number;
+  imageUpdatedAt: Date | null;
+  pieces: bigint;
+  revenue: bigint;
+};
 type DailyRow = { day: string; revenue: bigint; orders: bigint };
 
 export async function getSalesAnalytics(period: AnalyticsPeriod, storeId: string) {
@@ -50,7 +60,7 @@ export async function getSalesAnalytics(period: AnalyticsPeriod, storeId: string
       GROUP BY p.category
       ORDER BY revenue DESC`,
     prisma.$queryRaw<TopProductRow[]>`
-      SELECT p.id, p.name, p.category, p."priceCents", p.stock,
+      SELECT p.id, p.name, p.category, p."priceCents", p.stock, p."imageUpdatedAt",
              SUM(oi.quantity)::bigint AS pieces,
              SUM(oi.quantity * oi."unitPriceCents")::bigint AS revenue
       FROM "OrderItem" oi
@@ -104,6 +114,7 @@ export async function getSalesAnalytics(period: AnalyticsPeriod, storeId: string
       category: row.category,
       priceCents: row.priceCents,
       stock: row.stock,
+      imageUrl: productImageUrl(row),
       pieces: Number(row.pieces),
       revenueCents: Number(row.revenue),
     })),

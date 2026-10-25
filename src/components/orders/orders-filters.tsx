@@ -47,7 +47,7 @@ export function OrdersSearch({ filters }: { filters: OrderFilters }) {
         {filters.q && (
           <Link
             href={hrefWith(filters, { q: "" })}
-            className="inline-flex h-11 items-center px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-ink-900"
+            className="inline-flex h-11 items-center px-3 text-sm font-semibold text-slate-500 hover:text-ink-900"
           >
             Limpiar
           </Link>

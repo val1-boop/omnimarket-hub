@@ -98,21 +98,35 @@ model Store {
 }
 
 model Product {
-  id         String      @id @default(cuid())
-  storeId    String
-  sku        String
-  name       String
-  category   String
-  priceCents Int
-  costCents  Int
-  stock      Int         @default(0)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  orderItems OrderItem[]
-  store      Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  id             String        @id @default(cuid())
+  storeId        String
+  sku            String
+  name           String
+  category       String
+  priceCents     Int
+  costCents      Int
+  stock          Int           @default(0)
+  // Cuándo se subió la foto (null = sin foto). Va en la dirección de la imagen para que el
+  // navegador pida la nueva cuando cambia.
+  imageUpdatedAt DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  orderItems     OrderItem[]
+  image          ProductImage?
+  store          Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
   @@unique([storeId, sku])
   @@index([storeId, category])
+}
+
+// Foto de un producto, ya reducida en el navegador (máximo 800 px, WebP o JPEG).
+// Va en su propia tabla para que las consultas de productos no carguen las imágenes.
+model ProductImage {
+  productId String   @id
+  data      Bytes
+  mimeType  String
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model Customer {

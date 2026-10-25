@@ -15,6 +15,7 @@ import { SavingSkeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDate, formatNumber, formatOrderNumber } from "@/lib/format";
 import { ORDER_STATUS_LABELS, ORDER_STATUSES } from "@/lib/order-status";
 import { runAction } from "@/lib/run-action";
+import { cn } from "@/lib/utils";
 import { bulkDeleteOrders, bulkUpdateOrderStatus } from "@/server/actions/orders";
 import type { OrderRow } from "@/server/queries/orders";
 
@@ -126,11 +127,12 @@ export function OrdersTable({ rows }: { rows: OrderRow[] }) {
 
   return (
     <>
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-        <table className="w-full min-w-[720px] text-left text-sm" data-testid="orders-table">
-          <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
-            <tr>
-              <th scope="col" className="w-12 px-4 py-3">
+      {/* En computadora es una tabla; en celular (max-md) cada fila se acomoda como tarjeta, sin deslizar de lado. */}
+      <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white">
+        <table className="w-full text-left text-sm max-md:block md:min-w-[720px]" data-testid="orders-table">
+          <thead className="border-b border-slate-200 bg-slate-50 text-xs text-slate-500 max-md:block">
+            <tr className="max-md:flex">
+              <th scope="col" className="w-12 px-4 py-3 max-md:flex max-md:w-auto max-md:items-center max-md:gap-3">
                 <input
                   ref={selectAllRef}
                   id="select-all-orders"
@@ -141,16 +143,19 @@ export function OrdersTable({ rows }: { rows: OrderRow[] }) {
                   aria-label="Seleccionar todos los pedidos de esta página"
                   className="h-4 w-4 accent-ink-900"
                 />
+                <span aria-hidden="true" className="font-semibold md:hidden">
+                  Seleccionar todos
+                </span>
               </th>
-              <th scope="col" className="px-4 py-3 font-semibold">Pedido</th>
-              <th scope="col" className="px-4 py-3 font-semibold">Cliente</th>
-              <th scope="col" className="px-4 py-3 font-semibold">Fecha</th>
-              <th scope="col" className="px-4 py-3 text-right font-semibold">Productos</th>
-              <th scope="col" className="px-4 py-3 text-right font-semibold">Total</th>
-              <th scope="col" className="px-4 py-3 font-semibold">Paso</th>
+              <th scope="col" className="px-4 py-3 font-semibold max-md:hidden">Pedido</th>
+              <th scope="col" className="px-4 py-3 font-semibold max-md:hidden">Cliente</th>
+              <th scope="col" className="px-4 py-3 font-semibold max-md:hidden">Fecha</th>
+              <th scope="col" className="px-4 py-3 text-right font-semibold max-md:hidden">Productos</th>
+              <th scope="col" className="px-4 py-3 text-right font-semibold max-md:hidden">Total</th>
+              <th scope="col" className="px-4 py-3 font-semibold max-md:hidden">Paso</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 max-md:block">
             {visibleRows.map((row) => {
               const isSelected = selected.has(row.id);
               const orderNumber = formatOrderNumber(row.number);
@@ -159,9 +164,13 @@ export function OrdersTable({ rows }: { rows: OrderRow[] }) {
                   key={row.id}
                   data-testid={`order-row-${orderNumber}`}
                   aria-busy={savingIds.has(row.id) || undefined}
-                  className={isSelected ? "bg-lilac-50" : "hover:bg-slate-50"}
+                  className={cn(
+                    isSelected ? "bg-lilac-50" : "hover:bg-slate-50",
+                    // Tarjeta en celular: casilla a la izquierda; número y total; cliente y paso; fecha y productos.
+                    "max-md:grid max-md:grid-cols-[1.25rem_minmax(0,1fr)_auto] max-md:items-center max-md:gap-x-3 max-md:gap-y-1.5 max-md:px-4 max-md:py-3.5 [&>td]:max-md:p-0",
+                  )}
                 >
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 max-md:row-span-3 max-md:self-start max-md:pt-0.5">
                     <input
                       id={`select-${row.id}`}
                       name="pedidos"
@@ -173,7 +182,7 @@ export function OrdersTable({ rows }: { rows: OrderRow[] }) {
                       className="h-4 w-4 accent-ink-900"
                     />
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs font-semibold text-ink-900">
+                  <td className="px-4 py-3 font-mono text-xs font-semibold text-ink-900 max-md:col-start-2 max-md:row-start-1">
                     <Link
                       href={`/pedidos/${row.id}`}
                       className="underline decoration-slate-300 underline-offset-4 hover:decoration-ink-900"
@@ -182,12 +191,21 @@ export function OrdersTable({ rows }: { rows: OrderRow[] }) {
                       {orderNumber}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-ink-900">{row.customerName}</td>
-                  <td className="px-4 py-3 text-slate-500">{formatDate(row.createdAt)}</td>
-                  <td className="px-4 py-3 text-right text-slate-500">{formatNumber(row.itemCount)}</td>
-                  <td className="px-4 py-3 text-right font-semibold text-ink-900">{formatCurrency(row.totalCents)}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-col items-start gap-1.5">
+                  <td className="px-4 py-3 text-ink-900 max-md:col-start-2 max-md:row-start-2 max-md:truncate max-md:font-medium">
+                    {row.customerName}
+                  </td>
+                  <td className="px-4 py-3 text-slate-500 max-md:col-start-2 max-md:row-start-3 max-md:text-xs">
+                    {formatDate(row.createdAt)}
+                  </td>
+                  <td className="px-4 py-3 text-right text-slate-500 max-md:col-start-3 max-md:row-start-3 max-md:text-xs">
+                    {formatNumber(row.itemCount)}
+                    <span className="md:hidden">{row.itemCount === 1 ? " producto" : " productos"}</span>
+                  </td>
+                  <td className="px-4 py-3 text-right font-semibold text-ink-900 max-md:col-start-3 max-md:row-start-1 max-md:font-display max-md:font-extrabold">
+                    {formatCurrency(row.totalCents)}
+                  </td>
+                  <td className="px-4 py-3 max-md:col-start-3 max-md:row-start-2 max-md:justify-self-end">
+                    <div className="flex flex-col items-start gap-1.5 max-md:items-end">
                       <StatusBadge status={row.status} />
                       {savingIds.has(row.id) && <SavingSkeleton />}
                     </div>
@@ -210,7 +228,7 @@ export function OrdersTable({ rows }: { rows: OrderRow[] }) {
             {selectedIds.length === 1 ? "1 pedido seleccionado" : `${formatNumber(selectedIds.length)} pedidos seleccionados`}
           </p>
           <div className="flex flex-wrap items-center gap-2">
-            <label htmlFor="bulk-status" className="text-xs uppercase tracking-wider text-slate-300">
+            <label htmlFor="bulk-status" className="text-xs font-semibold text-slate-300">
               Pasar a
             </label>
             <Select

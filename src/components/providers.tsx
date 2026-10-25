@@ -23,7 +23,15 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      <Toaster position="top-right" richColors closeButton theme={theme} />
+      {/* Debajo del encabezado (72 px): así un aviso nunca tapa "Cerrar sesión" ni el menú. */}
+      <Toaster
+        position="top-right"
+        richColors
+        closeButton
+        theme={theme}
+        offset={{ top: 84, right: 16 }}
+        mobileOffset={{ top: 80, left: 12, right: 12 }}
+      />
     </QueryClientProvider>
   );
 }
