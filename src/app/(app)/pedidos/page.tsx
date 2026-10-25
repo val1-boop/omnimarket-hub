@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Download, Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { OrdersSearch, StatusChips, StatusChipsSkeleton, ordersHref } from "@/components/orders/orders-filters";
@@ -65,6 +65,12 @@ async function OrdersResults({ filters }: { filters: OrderFilters }) {
   );
 }
 
+// Dirección de la descarga en CSV con los filtros actuales (sin la página: se descargan todos).
+function exportHref(filters: OrderFilters) {
+  const query = ordersHref(filters, { page: 1 }).split("?")[1];
+  return query ? `/api/pedidos/exportar?${query}` : "/api/pedidos/exportar";
+}
+
 export default async function PedidosPage({ searchParams }: PedidosPageProps) {
   const filters = parseOrderFilters(await searchParams);
 
@@ -75,10 +81,17 @@ export default async function PedidosPage({ searchParams }: PedidosPageProps) {
         title="Pedidos"
         description="Marca varios pedidos con la casilla y cámbialos de paso todos a la vez."
         actions={
-          <Link href="/pedidos/nuevo" className={buttonVariants()}>
-            <Plus aria-hidden="true" />
-            Nuevo pedido
-          </Link>
+          <>
+            {/* Descarga lo mismo que muestra la tabla (búsqueda, paso y orden), pero todos los pedidos. */}
+            <a href={exportHref(filters)} download className={buttonVariants({ variant: "outline" })}>
+              <Download aria-hidden="true" />
+              Descargar Excel
+            </a>
+            <Link href="/pedidos/nuevo" className={buttonVariants()}>
+              <Plus aria-hidden="true" />
+              Nuevo pedido
+            </Link>
+          </>
         }
       />
       <OrdersSearch filters={filters} />

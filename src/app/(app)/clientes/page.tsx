@@ -1,9 +1,11 @@
-import { ChevronRight, Plus, Search } from "lucide-react";
+import { ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
+import { CustomersListSkeleton } from "@/components/customers/customers-list-skeleton";
 import { PageHeader } from "@/components/page-header";
 import { Pagination } from "@/components/pagination";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { LiveSearch } from "@/components/live-search";
+import { buttonVariants } from "@/components/ui/button";
 import { formatCurrency, formatDate, formatNumber } from "@/lib/format";
 import { SortSelect } from "@/components/sort-select";
 import {
@@ -35,8 +37,6 @@ export default async function ClientesPage({ searchParams }: ClientesPageProps) 
   const q = first(params.q).trim().slice(0, 80);
   const page = Math.max(1, Math.floor(Number(first(params.page))) || 1);
   const sort = parseCustomerSort(first(params.orden));
-  const { store } = await requireStoreContext();
-  const { rows, total, pageCount } = await getCustomersPage(store.id, q, page, sort);
 
   return (
     <>
@@ -52,25 +52,28 @@ export default async function ClientesPage({ searchParams }: ClientesPageProps) 
         }
       />
 
-      <form action="/clientes" className="mb-4 flex flex-col gap-3 sm:flex-row">
-        {sort !== "compras" && <input type="hidden" name="orden" value={sort} />}
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-          <Input name="q" defaultValue={q} placeholder="Busca por nombre, ciudad o correo" aria-label="Buscar clientes" className="pl-9" />
-        </div>
-        <div className="flex gap-2">
-          <Button type="submit">Buscar</Button>
-          {q && (
-            <Link
-              href="/clientes"
-              className="inline-flex h-11 items-center px-3 text-sm font-semibold text-slate-500 hover:text-ink-900"
-            >
-              Limpiar
-            </Link>
-          )}
-        </div>
-      </form>
+      <LiveSearch
+        path="/clientes"
+        defaultValue={q}
+        keep={sort !== "compras" ? { orden: sort } : {}}
+        placeholder="Busca por nombre, ciudad o correo"
+        label="Buscar clientes"
+      />
 
+      {/* La lista se pide dentro del Suspense: al buscar, el encabezado y el buscador se quedan
+          en su lugar (sin perder lo que escribes) y solo la lista muestra el esqueleto. */}
+      <Suspense key={`${q}|${page}|${sort}`} fallback={<CustomersListSkeleton />}>
+        <CustomersResults q={q} page={page} sort={sort} />
+      </Suspense>
+    </>
+  );
+}
+
+async function CustomersResults({ q, page, sort }: { q: string; page: number; sort: CustomerSort }) {
+  const { store } = await requireStoreContext();
+  const { rows, total, pageCount } = await getCustomersPage(store.id, q, page, sort);
+  return (
+    <>
       {rows.length === 0 ? (
         <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center" data-testid="customers-empty">
           <p className="font-display text-base font-bold text-ink-900">
