@@ -21,9 +21,13 @@ import { createOrder } from "@/server/actions/orders";
 type OrderFormProps = {
   customers: { id: string; name: string; city: string }[];
   products: { id: string; name: string; priceCents: number; costCents: number; stock: number }[];
+  /** Cliente ya elegido (cuando se llega desde su ficha). */
+  initialCustomerId?: string;
 };
 
-export function OrderForm({ customers, products }: OrderFormProps) {
+export function OrderForm({ customers, products, initialCustomerId }: OrderFormProps) {
+  // Si la tienda todavía no tiene clientes, el formulario empieza en "Cliente nuevo".
+  const startCustomer = initialCustomerId ?? (customers.length === 0 ? NEW_CUSTOMER : "");
   const router = useRouter();
   const {
     control,
@@ -32,9 +36,8 @@ export function OrderForm({ customers, products }: OrderFormProps) {
     formState: { errors },
   } = useForm<OrderInput>({
     resolver: zodResolver(orderSchema),
-    // Si la tienda todavía no tiene clientes, el formulario empieza en "Cliente nuevo".
     defaultValues: {
-      customerId: customers.length === 0 ? NEW_CUSTOMER : "",
+      customerId: startCustomer,
       newCustomer: { name: "", city: "" },
       items: [{ productId: "", quantity: 1 }],
     },
@@ -75,7 +78,7 @@ export function OrderForm({ customers, products }: OrderFormProps) {
             <Select
               id="customerId"
               aria-invalid={Boolean(errors.customerId)}
-              defaultValue={customers.length === 0 ? NEW_CUSTOMER : ""}
+              defaultValue={startCustomer}
               {...register("customerId")}
             >
               <option value="">Elige un cliente…</option>

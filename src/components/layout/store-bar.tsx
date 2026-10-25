@@ -13,21 +13,30 @@ export function StoreBar({ store }: { store: ActiveStore }) {
       data-testid="store-bar"
       className={cn("border-b", store.isDemo ? "border-amber-200 bg-amber-50" : "border-slate-200 bg-lilac-50")}
     >
-      <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-2.5 text-sm sm:flex-row sm:items-center sm:justify-between md:px-8">
-        <p className="flex items-start gap-2 text-ink-900 sm:items-center">
+      {/* En celular cabe en una sola fila: texto corto a la izquierda y el botón a la derecha. */}
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2 text-sm md:px-8 md:py-2.5">
+        <p className="flex min-w-0 items-center gap-2 text-ink-900">
           {store.isDemo ? (
-            <FlaskConical className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 sm:mt-0" aria-hidden="true" />
+            <FlaskConical className="h-4 w-4 shrink-0 text-amber-700" aria-hidden="true" />
           ) : (
-            <Store className="mt-0.5 h-4 w-4 shrink-0 text-lilac-700 sm:mt-0" aria-hidden="true" />
+            <Store className="h-4 w-4 shrink-0 text-lilac-700" aria-hidden="true" />
           )}
           {store.isDemo ? (
-            <span>
-              <strong>Tienda de demostración:</strong> datos de ejemplo que comparten todos los que entran. No son
-              ventas reales y se pueden restablecer en cualquier momento.
+            <span className="min-w-0">
+              {/* Celular: versión corta. Computadora: la explicación completa. */}
+              <span className="sm:hidden">
+                <strong>Demostración</strong> · datos de ejemplo
+              </span>
+              <span className="max-sm:hidden">
+                <strong>Tienda de demostración:</strong> datos de ejemplo que comparten todos los que entran. No son
+                ventas reales y se pueden restablecer en cualquier momento.
+              </span>
             </span>
           ) : (
-            <span>
-              <strong>Mi tienda:</strong> solo tú ves lo que registras aquí.
+            <span className="min-w-0">
+              <strong>Mi tienda</strong>
+              <span className="sm:hidden"> · solo tú la ves</span>
+              <span className="max-sm:hidden">: solo tú ves lo que registras aquí.</span>
             </span>
           )}
         </p>
@@ -35,6 +44,7 @@ export function StoreBar({ store }: { store: ActiveStore }) {
           <StoreSwitchButton
             to={store.isDemo ? "mia" : "demo"}
             label={store.isDemo ? "Volver a mi tienda" : "Ver la tienda de demostración"}
+            shortLabel={store.isDemo ? "Mi tienda" : "Ver demostración"}
             size="sm"
           />
         </div>

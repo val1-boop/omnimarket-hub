@@ -6,7 +6,10 @@ import { buttonVariants } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
 import { requireStoreContext } from "@/server/store";
 
-export default async function NuevoPedidoPage() {
+type NuevoPedidoPageProps = { searchParams: Promise<{ cliente?: string | string[] }> };
+
+export default async function NuevoPedidoPage({ searchParams }: NuevoPedidoPageProps) {
+  const { cliente } = await searchParams;
   const { store } = await requireStoreContext();
   const [customers, products] = await Promise.all([
     prisma.customer.findMany({
@@ -41,7 +44,12 @@ export default async function NuevoPedidoPage() {
           </Link>
         </div>
       ) : (
-        <OrderForm customers={customers} products={products} />
+        <OrderForm
+          customers={customers}
+          products={products}
+          // Si vienes desde la ficha de un cliente, ya viene elegido (solo si es de esta tienda).
+          initialCustomerId={customers.find((customer) => customer.id === cliente)?.id}
+        />
       )}
     </>
   );

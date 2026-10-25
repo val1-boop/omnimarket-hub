@@ -1,10 +1,11 @@
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BackLink } from "@/components/back-link";
 import { CustomerForm } from "@/components/customers/customer-form";
 import { StatusBadge } from "@/components/orders/status-badge";
 import { PageHeader } from "@/components/page-header";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { averageTicketFromTotals } from "@/lib/finance";
 import { formatCurrency, formatDate, formatNumber, formatOrderNumber } from "@/lib/format";
@@ -41,7 +42,17 @@ export default async function ClientePage({ params }: ClientePageProps) {
   return (
     <>
       <BackLink href="/clientes">Volver a clientes</BackLink>
-      <PageHeader eyebrow={customer.city} title={customer.name} description={customer.email ?? undefined} />
+      <PageHeader
+        eyebrow={customer.city}
+        title={customer.name}
+        description={customer.email ?? undefined}
+        actions={
+          <Link href={`/pedidos/nuevo?cliente=${customer.id}`} className={buttonVariants()}>
+            <Plus aria-hidden="true" />
+            Nuevo pedido para este cliente
+          </Link>
+        }
+      />
 
       <dl className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4" data-testid="customer-stats">
         <Stat label="Ha comprado" value={formatCurrency(spentCents)} />

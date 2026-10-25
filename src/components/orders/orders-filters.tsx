@@ -1,8 +1,6 @@
 import type { OrderStatus } from "@prisma/client";
-import { Search } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { LiveSearch } from "@/components/live-search";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { OrderFilters } from "@/lib/filters";
 import { formatNumber } from "@/lib/format";
@@ -27,35 +25,20 @@ type StatusChipsProps = {
   counts: Map<OrderStatus, number>;
 };
 
-// Buscador: funciona como un formulario normal, así la búsqueda queda en la dirección.
+// Buscador de pedidos: busca mientras escribes y conserva el paso y el orden elegidos.
 // No espera a la base de datos, por eso se ve al instante al cambiar de filtro.
 export function OrdersSearch({ filters }: { filters: OrderFilters }) {
+  const keep: Record<string, string> = {};
+  if (filters.status) keep.status = filters.status;
+  if (filters.sort !== "recientes") keep.orden = filters.sort;
   return (
-    <form action="/pedidos" className="mb-4 flex flex-col gap-3 sm:flex-row">
-      {filters.status && <input type="hidden" name="status" value={filters.status} />}
-      {filters.sort !== "recientes" && <input type="hidden" name="orden" value={filters.sort} />}
-      <div className="relative flex-1">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-        <Input
-          name="q"
-          defaultValue={filters.q}
-          placeholder="Busca por cliente o número de pedido (ej. OM-00042)"
-          aria-label="Buscar pedidos"
-          className="pl-9"
-        />
-      </div>
-      <div className="flex gap-2">
-        <Button type="submit">Buscar</Button>
-        {filters.q && (
-          <Link
-            href={hrefWith(filters, { q: "" })}
-            className="inline-flex h-11 items-center px-3 text-sm font-semibold text-slate-500 hover:text-ink-900"
-          >
-            Limpiar
-          </Link>
-        )}
-      </div>
-    </form>
+    <LiveSearch
+      path="/pedidos"
+      defaultValue={filters.q}
+      keep={keep}
+      placeholder="Busca por cliente o número de pedido (ej. OM-00042)"
+      label="Buscar pedidos"
+    />
   );
 }
 
