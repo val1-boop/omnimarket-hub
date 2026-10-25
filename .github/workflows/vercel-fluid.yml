@@ -34,12 +34,14 @@ jobs:
           npx vercel@65 pull --yes --environment=production --token="$VERCEL_TOKEN" > /dev/null
           name=$(jq -r '.projectName' .vercel/project.json)
           echo "name=$name" >> "$GITHUB_OUTPUT"
-          info=$(npx vercel@65 project inspect "$name" --json --token="$VERCEL_TOKEN" 2>/dev/null || echo '{}')
-          antes=$(echo "$info" | jq -r '.resourceConfig.fluid // .fluid // "desconocido"')
-          echo "antes=$antes" >> "$GITHUB_OUTPUT"
-          echo "::notice title=Fluid compute (antes)::$antes"
-          # Solo los ajustes de las funciones (región, memoria, tiempo máximo): nada secreto.
-          echo "::notice title=Ajustes de las funciones::$(echo "$info" | jq -c '.resourceConfig // {}')"
+          # Lo que responde Vercel, tal cual (sin variables de entorno ni datos secretos).
+          npx vercel@65 project inspect "$name" --token="$VERCEL_TOKEN" 2>&1 | grep -viE "token|secret|env" | tee inspect.txt || true
+          npx vercel@65 project inspect "$name" --json --token="$VERCEL_TOKEN" > inspect.json 2> inspect.err || true
+          echo "--- claves del JSON:"; jq -c 'keys' inspect.json 2>/dev/null || { echo "(no es JSON)"; head -c 400 inspect.json; cat inspect.err | head -5; }
+          antes=$(jq -r '[.. | objects | select(has("fluid")) | .fluid][0] // "desconocido"' inspect.json 2>/dev/null || echo desconocido)
+          [ "$antes" = "desconocido" ] && antes=$(grep -iE "fluid" inspect.txt | head -1 | sed -E 's/^[[:space:]]+//' || true)
+          echo "antes=${antes:-desconocido}" >> "$GITHUB_OUTPUT"
+          echo "::notice title=Fluid compute (antes)::${antes:-desconocido}"
 
       - name: Cambiar el ajuste
         if: inputs.accion != 'revisar'
