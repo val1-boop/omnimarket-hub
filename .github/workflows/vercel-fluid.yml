@@ -1,0 +1,59 @@
+# Revisa o cambia "Fluid compute" en el proyecto de Vercel (cómo arranca el servidor).
+# Se corre a mano desde Actions → "Vercel: Fluid compute" → Run workflow.
+#  - revisar: solo muestra si está activado (no cambia nada).
+#  - activar / desactivar: cambia el ajuste y vuelve a correr la última CI de main
+#    (pruebas + despliegue + Verificar producción), porque el ajuste aplica desde el siguiente despliegue.
+name: "Vercel: Fluid compute"
+
+on:
+  workflow_dispatch:
+    inputs:
+      accion:
+        description: "Qué hacer"
+        type: choice
+        options: [revisar, activar, desactivar]
+        default: revisar
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  fluid:
+    name: Fluid compute (${{ inputs.accion }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - name: Leer el proyecto de Vercel
+        id: proyecto
+        run: |
+          npx vercel@65 pull --yes --environment=production --token="$VERCEL_TOKEN" > /dev/null
+          name=$(jq -r '.projectName' .vercel/project.json)
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          info=$(npx vercel@65 project inspect "$name" --json --token="$VERCEL_TOKEN" 2>/dev/null || echo '{}')
+          antes=$(echo "$info" | jq -r '.resourceConfig.fluid // .fluid // "desconocido"')
+          echo "antes=$antes" >> "$GITHUB_OUTPUT"
+          echo "::notice title=Fluid compute (antes)::$antes"
+          # Solo los ajustes de las funciones (región, memoria, tiempo máximo): nada secreto.
+          echo "::notice title=Ajustes de las funciones::$(echo "$info" | jq -c '.resourceConfig // {}')"
+
+      - name: Cambiar el ajuste
+        if: inputs.accion != 'revisar'
+        run: |
+          flag=$([ "${{ inputs.accion }}" = "activar" ] && echo "--fluid-compute" || echo "--no-fluid-compute")
+          npx vercel@65 project update "${{ steps.proyecto.outputs.name }}" $flag --yes --token="$VERCEL_TOKEN"
+          despues=$(npx vercel@65 project inspect "${{ steps.proyecto.outputs.name }}" --json --token="$VERCEL_TOKEN" 2>/dev/null | jq -r '.resourceConfig.fluid // .fluid // "desconocido"')
+          echo "::notice title=Fluid compute (después)::$despues"
+
+      - name: Volver a desplegar con el ajuste nuevo
+        if: inputs.accion != 'revisar'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          run=$(gh run list --repo "${{ github.repository }}" --workflow=ci.yml --branch=main --event=push --status=success --limit=1 --json databaseId --jq '.[0].databaseId')
+          gh run rerun "$run" --repo "${{ github.repository }}"
+          echo "::notice title=Despliegue::Se volvió a correr la CI $run (pruebas → despliegue → Verificar producción)"
