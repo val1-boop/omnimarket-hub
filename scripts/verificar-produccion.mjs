@@ -218,7 +218,7 @@ async function checkSession(browser) {
 
     // Tienda de demostración: todas las páginas y un movimiento en el tablero.
     await context.addCookies([{ name: "omnimarket-tienda", value: "demo", url: BASE, httpOnly: true, secure, sameSite: "Lax" }]);
-    for (const path of ["/dashboard", "/pedidos", "/pedidos/nuevo", "/productos", "/productos/nuevo", "/productos/prod_011", "/privacidad"]) {
+    for (const path of ["/dashboard", "/pedidos", "/pedidos/nuevo", "/productos", "/productos/nuevo", "/productos/prod_011", "/clientes", "/clientes/nuevo", "/privacidad"]) {
       const status = await visit(path);
       s.check(status === 200, `Tienda de demostración: ${path} → HTTP ${status}`);
     }

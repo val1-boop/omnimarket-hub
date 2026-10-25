@@ -1,25 +1,56 @@
 @import "tailwindcss";
 
-/* Paleta de OmniMarket: azul marino + arena + crema. */
+/* Paleta de OmniMarket: tinta (casi negro con un toque violeta) + lila + verde lima de acento. */
 @theme {
-  --color-navy-950: #0e1424;
-  --color-navy-900: #18213a;
-  --color-navy-800: #233056;
-  --color-navy-700: #34446f;
-  --color-sand-50: #faf7f2;
-  --color-sand-100: #f4ede3;
-  --color-sand-200: #e8dccb;
-  --color-sand-500: #b4916c;
-  --color-sand-600: #9a7752;
-  --color-sand-700: #7b5c3d;
-    /* Color de las gráficas: azul de la marca validado para daltonismo y contraste. */
-  --color-chart-1: #3d5ab8;
+  --color-ink-950: #0d0b1f;
+  --color-ink-900: #17132f;
+  --color-ink-800: #262050;
+  --color-ink-700: #3a3270;
+  --color-lilac-50: #f5f3ff;
+  --color-lilac-100: #ebe7fe;
+  --color-lilac-200: #d8d0fc;
+  --color-lilac-300: #b9b0f5;
+  --color-lilac-500: #8b7af2;
+  --color-lilac-600: #5b47d6;
+  --color-lilac-700: #4a36b8;
+  /* Acento para la acción principal de cada pantalla (texto en tinta encima: contraste 14:1). */
+  --color-lima-300: #d4f34a;
+  --color-lima-400: #c2e534;
+  /* Color de las gráficas: violeta de la marca, revisado para daltonismo y contraste. */
+  --color-chart-1: #5b47d6;
+
+  /* Animaciones de la app (ver abajo: se apagan si la persona pidió menos movimiento). */
+  --animate-rise: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-grow: grow 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-flash: flash 1.6s ease-out;
 }
 
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-display: var(--font-montserrat);
-  --font-script: var(--font-dancing-script);
+}
+
+/* Aparece subiendo un poco: para lo que llega nuevo a la pantalla (tarjetas, números). */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* Una barra crece desde cero hasta su tamaño: así se lee como "cuánto" de un vistazo. */
+@keyframes grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* Resalta por un momento lo que acaba de cambiar (por ejemplo, un pedido que moviste). */
+@keyframes flash {
+  0%,
+  30% {
+    box-shadow: 0 0 0 3px var(--color-lima-400);
+  }
 }
 
 /* La app usa siempre tema claro, aunque Windows o el navegador estén en modo oscuro. */
@@ -28,5 +59,39 @@ html {
 }
 
 body {
-  @apply bg-white text-slate-900 antialiased;
+  @apply bg-[#fbfaff] text-slate-900 antialiased;
+}
+
+/* Palabra destacada de los títulos, con degradado violeta. */
+.text-gradient {
+  background-image: linear-gradient(100deg, var(--color-lilac-600), #a855f7 60%, #d946ef);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Carrusel: se desliza con el dedo y cada tarjeta queda bien acomodada. Sin barra visible. */
+.snap-carousel {
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.snap-carousel::-webkit-scrollbar {
+  display: none;
+}
+.snap-carousel > * {
+  scroll-snap-align: start;
+}
+
+/* Si la persona pidió menos movimiento en su sistema, todo aparece sin animarse. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

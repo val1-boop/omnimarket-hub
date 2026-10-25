@@ -53,6 +53,9 @@ export function KanbanBoard({ initialBoard }: { initialBoard: KanbanColumnData[]
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
   );
 
+  // Pedido que se acaba de mover: se resalta un momento para encontrarlo en su columna nueva.
+  const [flashId, setFlashId] = useState<string | null>(null);
+
   const move = useMutation({
     mutationFn: ({ id, status }: MoveVariables) =>
       runAction(() => moveOrder({ id, status }), "No pudimos mover el pedido. Revisa tu conexión."),
@@ -69,7 +72,8 @@ export function KanbanBoard({ initialBoard }: { initialBoard: KanbanColumnData[]
       if (context) setBoard(context.previous);
       toast.error(`${error.message} ${formatOrderNumber(number)} regresó a donde estaba.`);
     },
-    onSuccess: (_data, { number, status }) => {
+    onSuccess: (_data, { id, number, status }) => {
+      setFlashId(id);
       toast.success(`${formatOrderNumber(number)} ahora está en “${ORDER_STATUS_LABELS[status]}”.`);
       router.refresh();
     },
@@ -111,6 +115,8 @@ export function KanbanBoard({ initialBoard }: { initialBoard: KanbanColumnData[]
                   card={card}
                   nextStatus={nextStatus}
                   saving={savingIds.has(card.id)}
+                  highlight={flashId === card.id}
+                  onHighlightEnd={() => setFlashId(null)}
                   onAdvance={() => nextStatus && requestMove(card.id, nextStatus)}
                 />
               );
@@ -125,7 +131,7 @@ export function KanbanBoard({ initialBoard }: { initialBoard: KanbanColumnData[]
           <KanbanCardView
             card={activeCard}
             nextStatus={null}
-            className="rotate-2 cursor-grabbing shadow-xl ring-2 ring-sand-500"
+            className="rotate-2 cursor-grabbing shadow-xl ring-2 ring-lilac-500"
           />
         )}
       </DragOverlay>

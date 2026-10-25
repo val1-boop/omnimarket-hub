@@ -47,7 +47,7 @@ export function OrdersSearch({ filters }: { filters: OrderFilters }) {
         {filters.q && (
           <Link
             href={hrefWith(filters, { q: "" })}
-            className="inline-flex h-11 items-center px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-navy-900"
+            className="inline-flex h-11 items-center px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-ink-900"
           >
             Limpiar
           </Link>
@@ -77,8 +77,8 @@ export function StatusChips({ filters, counts }: StatusChipsProps) {
             className={cn(
               "rounded-full border px-4 py-1.5 text-xs font-semibold transition-colors",
               active
-                ? "border-navy-900 bg-navy-900 text-white"
-                : "border-slate-300 bg-white text-slate-600 hover:border-navy-900 hover:text-navy-900",
+                ? "border-ink-900 bg-ink-900 text-white"
+                : "border-slate-300 bg-white text-slate-600 hover:border-ink-900 hover:text-ink-900",
             )}
           >
             {chip.label} <span className="opacity-70">({formatNumber(chip.count)})</span>

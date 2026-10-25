@@ -17,8 +17,8 @@ export default async function KanbanPage() {
         description="Arrastra cada pedido a la columna del paso en el que va, o usa el botón “Pasar a…” de la tarjeta."
       />
       {board.every((column) => column.total === 0) && (
-        <div className="mb-6 flex flex-col gap-3 rounded-xl bg-sand-50 p-5 sm:flex-row sm:items-center sm:justify-between" data-testid="kanban-empty">
-          <p className="text-sm text-navy-900">
+        <div className="mb-6 flex flex-col gap-3 rounded-xl bg-lilac-50 p-5 sm:flex-row sm:items-center sm:justify-between" data-testid="kanban-empty">
+          <p className="text-sm text-ink-900">
             Todavía no tienes pedidos en el tablero. Cuando registres uno, aparecerá en “Por preparar”.
           </p>
           <Link href="/pedidos/nuevo" className={buttonVariants({ size: "sm" })}>

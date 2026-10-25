@@ -16,7 +16,7 @@ function SalesTooltip({ active, payload }: TooltipProps) {
   if (!active || !point) return null;
   return (
     <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-md">
-      <p className="text-sm font-semibold text-navy-900">{formatCurrency(point.revenueCents)}</p>
+      <p className="text-sm font-semibold text-ink-900">{formatCurrency(point.revenueCents)}</p>
       <p className="text-xs text-slate-500">
         {formatDayKey(point.day, "long")} · {point.orders === 1 ? "1 pedido" : `${formatNumber(point.orders)} pedidos`}
       </p>

@@ -4,7 +4,7 @@ import { NAV_ITEMS } from "@/components/layout/nav-items";
 
 export function SiteFooter() {
   return (
-    <footer className="bg-navy-900 text-slate-300">
+    <footer className="bg-ink-900 text-slate-300">
       <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-10 md:flex-row md:items-start md:justify-between md:px-8">
         <div>
           <Logo inverted />
@@ -24,7 +24,7 @@ export function SiteFooter() {
           </ul>
         </nav>
       </div>
-      <div className="border-t border-navy-800">
+      <div className="border-t border-ink-800">
         <div className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-5 text-xs text-slate-400 md:flex-row md:justify-between md:px-8">
           <p>
             © {new Date().getFullYear()} OmniMarket · Proyecto escolar ·{" "}

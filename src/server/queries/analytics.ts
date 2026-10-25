@@ -2,11 +2,14 @@ import { calculateChange, fillDailySeries, getPeriodRange, type AnalyticsPeriod 
 import { averageTicketFromTotals, calculateMargin } from "@/lib/finance";
 import { prisma } from "@/lib/prisma";
 
+// Cuántos productos muestra el carrusel de "Lo más vendido".
+export const TOP_PRODUCTS = 10;
+
 // Los pedidos cancelados no cuentan como venta.
 const SOLD = { status: { not: "CANCELLED" as const } };
 
 type CategoryRow = { category: string; revenue: bigint; profit: bigint; pieces: bigint };
-type TopProductRow = { id: string; name: string; category: string; pieces: bigint; revenue: bigint };
+type TopProductRow = { id: string; name: string; category: string; priceCents: number; stock: number; pieces: bigint; revenue: bigint };
 type DailyRow = { day: string; revenue: bigint; orders: bigint };
 
 export async function getSalesAnalytics(period: AnalyticsPeriod, storeId: string) {
@@ -47,16 +50,16 @@ export async function getSalesAnalytics(period: AnalyticsPeriod, storeId: string
       GROUP BY p.category
       ORDER BY revenue DESC`,
     prisma.$queryRaw<TopProductRow[]>`
-      SELECT p.id, p.name, p.category,
+      SELECT p.id, p.name, p.category, p."priceCents", p.stock,
              SUM(oi.quantity)::bigint AS pieces,
              SUM(oi.quantity * oi."unitPriceCents")::bigint AS revenue
       FROM "OrderItem" oi
       JOIN "Order" o ON o.id = oi."orderId"
       JOIN "Product" p ON p.id = oi."productId"
       WHERE o."storeId" = ${storeId} AND o.status <> 'CANCELLED' AND o."createdAt" >= ${from}
-      GROUP BY p.id, p.name, p.category
+      GROUP BY p.id
       ORDER BY pieces DESC, revenue DESC
-      LIMIT 5`,
+      LIMIT ${TOP_PRODUCTS}`,
   ]);
 
   const revenue = current._sum.totalCents ?? 0;
@@ -99,6 +102,8 @@ export async function getSalesAnalytics(period: AnalyticsPeriod, storeId: string
       id: row.id,
       name: row.name,
       category: row.category,
+      priceCents: row.priceCents,
+      stock: row.stock,
       pieces: Number(row.pieces),
       revenueCents: Number(row.revenue),
     })),

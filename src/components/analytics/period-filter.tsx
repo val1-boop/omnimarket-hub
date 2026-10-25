@@ -14,8 +14,8 @@ export function PeriodFilter({ period }: { period: AnalyticsPeriod }) {
           className={cn(
             "rounded-full border px-4 py-1.5 text-xs font-semibold transition-colors",
             days === period
-              ? "border-navy-900 bg-navy-900 text-white"
-              : "border-slate-300 bg-white text-slate-600 hover:border-navy-900 hover:text-navy-900",
+              ? "border-ink-900 bg-ink-900 text-white"
+              : "border-slate-300 bg-white text-slate-600 hover:border-ink-900 hover:text-ink-900",
           )}
         >
           Últimos {days} días

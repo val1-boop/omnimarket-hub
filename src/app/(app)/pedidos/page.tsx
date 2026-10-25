@@ -28,7 +28,7 @@ async function OrdersResults({ filters }: { filters: OrderFilters }) {
   if (storeTotal === 0) {
     return (
       <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center" data-testid="orders-empty">
-        <p className="font-display text-sm font-bold uppercase tracking-wider text-navy-900">
+        <p className="font-display text-base font-bold text-ink-900">
           Todavía no tienes pedidos
         </p>
         <p className="mt-1 text-sm text-slate-500">Cuando registres tu primer pedido, aparecerá aquí.</p>

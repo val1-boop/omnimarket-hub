@@ -24,7 +24,7 @@ function UserAvatar({ user }: { user: AppShellUser }) {
     return <Image src={user.image} alt="" width={36} height={36} priority className="h-9 w-9 rounded-full" />;
   }
   return (
-    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sand-100 text-sm font-semibold text-sand-700">
+    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-lilac-100 text-sm font-semibold text-lilac-700">
       {(user.name ?? user.email ?? "U").charAt(0).toUpperCase()}
     </div>
   );
@@ -40,22 +40,20 @@ export function AppShell({ user, store, children }: AppShellProps) {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-6 px-4 md:px-8">
+      <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/85 backdrop-blur-md">
+        <div className="mx-auto flex h-18 max-w-7xl items-center justify-between gap-6 px-4 md:px-8">
           <Logo />
 
           {/* Navegación de escritorio */}
-          <nav aria-label="Navegación principal" className="hidden items-center gap-8 md:flex">
+          <nav aria-label="Navegación principal" className="hidden items-center gap-1 rounded-full bg-lilac-50 p-1 md:flex">
             {NAV_ITEMS.map(({ href, label }) => (
               <Link
                 key={href}
                 href={href}
                 aria-current={isActive(href) ? "page" : undefined}
                 className={cn(
-                  "border-b-2 py-1 text-xs font-semibold uppercase tracking-widest transition-colors",
-                  isActive(href)
-                    ? "border-navy-900 text-navy-900"
-                    : "border-transparent text-slate-500 hover:text-navy-900",
+                  "rounded-full px-4 py-2 text-sm font-semibold transition-colors",
+                  isActive(href) ? "bg-ink-900 text-white shadow-sm" : "text-slate-600 hover:bg-white hover:text-ink-900",
                 )}
               >
                 {label}
@@ -66,7 +64,7 @@ export function AppShell({ user, store, children }: AppShellProps) {
           <div className="hidden items-center gap-3 md:flex">
             <UserAvatar user={user} />
             <div className="hidden max-w-40 lg:block">
-              <p className="truncate text-sm font-medium text-navy-900">{user.name ?? "Tu cuenta"}</p>
+              <p className="truncate text-sm font-medium text-ink-900">{user.name ?? "Tu cuenta"}</p>
               <p className="truncate text-xs text-slate-500">{user.email}</p>
             </div>
             <form action={signOutAction}>
@@ -92,7 +90,7 @@ export function AppShell({ user, store, children }: AppShellProps) {
         {/* Menú desplegable en móvil */}
         {mobileOpen && (
           <div className="border-t border-slate-200 bg-white px-4 pb-4 md:hidden">
-            <nav aria-label="Navegación móvil" className="flex flex-col py-2">
+            <nav aria-label="Navegación móvil" className="flex flex-col gap-1 py-3">
               {NAV_ITEMS.map(({ href, label }) => (
                 <Link
                   key={href}
@@ -100,8 +98,8 @@ export function AppShell({ user, store, children }: AppShellProps) {
                   onClick={() => setMobileOpen(false)}
                   aria-current={isActive(href) ? "page" : undefined}
                   className={cn(
-                    "border-l-2 px-3 py-3 text-xs font-semibold uppercase tracking-widest",
-                    isActive(href) ? "border-navy-900 bg-sand-50 text-navy-900" : "border-transparent text-slate-500",
+                    "rounded-xl px-4 py-3 text-sm font-semibold",
+                    isActive(href) ? "bg-ink-900 text-white" : "text-slate-600",
                   )}
                 >
                   {label}
@@ -111,7 +109,7 @@ export function AppShell({ user, store, children }: AppShellProps) {
             <div className="flex items-center gap-3 border-t border-slate-200 pt-4">
               <UserAvatar user={user} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-navy-900">{user.name ?? "Tu cuenta"}</p>
+                <p className="truncate text-sm font-medium text-ink-900">{user.name ?? "Tu cuenta"}</p>
                 <p className="truncate text-xs text-slate-500">{user.email}</p>
               </div>
               <form action={signOutAction}>

@@ -106,18 +106,18 @@ export function ProductForm({ product }: ProductFormProps) {
         </CardContent>
       </Card>
 
-      <Card className="h-fit bg-sand-50">
+      <Card className="h-fit bg-lilac-50">
         <CardContent className="space-y-4">
-          <p className="font-display text-sm font-bold uppercase tracking-wider text-navy-900">Lo que ganas</p>
+          <p className="font-display text-base font-bold text-ink-900">Lo que ganas</p>
           <div className="flex items-baseline justify-between">
             <span className="text-sm text-slate-600">Por pieza</span>
-            <span className="font-display text-2xl font-extrabold text-navy-900">
+            <span className="font-display text-2xl font-extrabold text-ink-900">
               {formatCurrency(Math.max(priceCents - costCents, 0))}
             </span>
           </div>
           <div className="flex items-baseline justify-between">
             <span className="text-sm text-slate-600">Margen</span>
-            <span className="text-sm font-semibold text-navy-900">
+            <span className="text-sm font-semibold text-ink-900">
               {formatPercent(Math.max(calculateMargin(priceCents, costCents), 0), 0)}
             </span>
           </div>

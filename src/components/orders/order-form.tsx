@@ -20,7 +20,7 @@ import { createOrder } from "@/server/actions/orders";
 
 type OrderFormProps = {
   customers: { id: string; name: string; city: string }[];
-  products: { id: string; name: string; priceCents: number; costCents: number }[];
+  products: { id: string; name: string; priceCents: number; costCents: number; stock: number }[];
 };
 
 export function OrderForm({ customers, products }: OrderFormProps) {
@@ -89,7 +89,7 @@ export function OrderForm({ customers, products }: OrderFormProps) {
           </Field>
 
           {isNewCustomer && (
-            <div className="grid gap-4 rounded-xl bg-sand-50 p-4 sm:grid-cols-2" data-testid="new-customer">
+            <div className="grid gap-4 rounded-xl bg-lilac-50 p-4 sm:grid-cols-2" data-testid="new-customer">
               <Field label="Nombre del cliente" htmlFor="newCustomerName" error={errors.newCustomer?.name?.message}>
                 <Input
                   id="newCustomerName"
@@ -110,7 +110,7 @@ export function OrderForm({ customers, products }: OrderFormProps) {
           )}
 
           <fieldset className="space-y-3">
-            <legend className="text-sm font-medium text-navy-900">¿Qué se lleva?</legend>
+            <legend className="text-sm font-medium text-ink-900">¿Qué se lleva?</legend>
             {fields.map((field, index) => (
               <div key={field.id} className="grid grid-cols-[1fr_6rem_auto] items-start gap-3">
                 <div>
@@ -122,11 +122,13 @@ export function OrderForm({ customers, products }: OrderFormProps) {
                   >
                     <option value="">Elige un producto…</option>
                     {products.map((product) => (
-                      <option key={product.id} value={product.id}>
+                      <option key={product.id} value={product.id} disabled={product.stock <= 0}>
                         {product.name} · {formatCurrency(product.priceCents)}
+                        {product.stock <= 0 ? " · agotado" : ""}
                       </option>
                     ))}
                   </Select>
+                  <StockHint product={products.find((p) => p.id === items?.[index]?.productId)} quantity={items?.[index]?.quantity} />
                   {errors.items?.[index]?.productId && (
                     <p role="alert" className="mt-1 text-xs text-rose-600">
                       {errors.items[index].productId.message}
@@ -184,12 +186,12 @@ export function OrderForm({ customers, products }: OrderFormProps) {
         </CardContent>
       </Card>
 
-      <Card className="h-fit bg-sand-50">
+      <Card className="h-fit bg-lilac-50">
         <CardContent className="space-y-4">
-          <p className="font-display text-sm font-bold uppercase tracking-wider text-navy-900">Resumen</p>
+          <p className="font-display text-base font-bold text-ink-900">Resumen</p>
           <div className="flex items-baseline justify-between">
             <span className="text-sm text-slate-600">Total a cobrar</span>
-            <span className="font-display text-2xl font-extrabold text-navy-900" data-testid="order-total">
+            <span className="font-display text-2xl font-extrabold text-ink-900" data-testid="order-total">
               {formatCurrency(totalCents)}
             </span>
           </div>
@@ -203,5 +205,17 @@ export function OrderForm({ customers, products }: OrderFormProps) {
         </CardContent>
       </Card>
     </form>
+  );
+}
+// Debajo del producto elegido: cuántas piezas hay, y un aviso si se piden más de las que hay.
+function StockHint({ product, quantity }: { product?: { stock: number }; quantity?: number }) {
+  if (!product) return null;
+  const tooMany = Number.isFinite(quantity) && (quantity ?? 0) > product.stock;
+  return (
+    <p className={tooMany ? "mt-1 text-xs font-medium text-rose-600" : "mt-1 text-xs text-slate-500"} data-testid="stock-hint">
+      {tooMany
+        ? `Solo ${product.stock === 1 ? "queda 1 pieza" : `quedan ${product.stock} piezas`}`
+        : `${product.stock === 1 ? "Queda 1 pieza" : `Quedan ${product.stock} piezas`} en inventario`}
+    </p>
   );
 }

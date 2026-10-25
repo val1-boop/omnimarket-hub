@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { Dancing_Script, Geist, Montserrat } from "next/font/google";
+import { Geist, Montserrat } from "next/font/google";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
-// Geist: texto general · Montserrat: títulos · Dancing Script: frases decorativas.
+// Geist: texto general · Montserrat: títulos.
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -13,12 +13,6 @@ const montserrat = Montserrat({
   variable: "--font-montserrat",
   subsets: ["latin"],
   weight: ["600", "700", "800"],
-});
-
-const dancingScript = Dancing_Script({
-  variable: "--font-dancing-script",
-  subsets: ["latin"],
-  weight: ["600"],
 });
 
 export const metadata: Metadata = {
@@ -35,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${geistSans.variable} ${montserrat.variable} ${dancingScript.variable} font-sans`}>
+      <body className={`${geistSans.variable} ${montserrat.variable} font-sans`}>
         <Providers>{children}</Providers>
       </body>
     </html>
