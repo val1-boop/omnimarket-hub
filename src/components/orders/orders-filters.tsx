@@ -14,6 +14,7 @@ function hrefWith(filters: OrderFilters, changes: Partial<OrderFilters>) {
   const params = new URLSearchParams();
   if (next.q) params.set("q", next.q);
   if (next.status) params.set("status", next.status);
+  if (next.sort !== "recientes") params.set("orden", next.sort);
   if (next.page > 1) params.set("page", String(next.page));
   const query = params.toString();
   return query ? `/pedidos?${query}` : "/pedidos";
@@ -32,6 +33,7 @@ export function OrdersSearch({ filters }: { filters: OrderFilters }) {
   return (
     <form action="/pedidos" className="mb-4 flex flex-col gap-3 sm:flex-row">
       {filters.status && <input type="hidden" name="status" value={filters.status} />}
+      {filters.sort !== "recientes" && <input type="hidden" name="orden" value={filters.sort} />}
       <div className="relative flex-1">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
         <Input

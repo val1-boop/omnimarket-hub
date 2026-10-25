@@ -5,18 +5,26 @@ import { Pagination } from "@/components/pagination";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatCurrency, formatDate, formatNumber } from "@/lib/format";
-import { getCustomersPage } from "@/server/queries/customers";
+import { SortSelect } from "@/components/sort-select";
+import {
+  CUSTOMER_SORT_LABELS,
+  CUSTOMER_SORTS,
+  getCustomersPage,
+  parseCustomerSort,
+  type CustomerSort,
+} from "@/server/queries/customers";
 import { requireStoreContext } from "@/server/store";
 
 type ClientesPageProps = {
-  searchParams: Promise<{ q?: string | string[]; page?: string | string[] }>;
+  searchParams: Promise<{ q?: string | string[]; page?: string | string[]; orden?: string | string[] }>;
 };
 
 const first = (value?: string | string[]) => (Array.isArray(value) ? value[0] : value) ?? "";
 
-function clientesHref(q: string, page: number) {
+function clientesHref(q: string, page: number, sort: CustomerSort) {
   const params = new URLSearchParams();
   if (q) params.set("q", q);
+  if (sort !== "compras") params.set("orden", sort);
   if (page > 1) params.set("page", String(page));
   const query = params.toString();
   return query ? `/clientes?${query}` : "/clientes";
@@ -26,15 +34,16 @@ export default async function ClientesPage({ searchParams }: ClientesPageProps) 
   const params = await searchParams;
   const q = first(params.q).trim().slice(0, 80);
   const page = Math.max(1, Math.floor(Number(first(params.page))) || 1);
+  const sort = parseCustomerSort(first(params.orden));
   const { store } = await requireStoreContext();
-  const { rows, total, pageCount } = await getCustomersPage(store.id, q, page);
+  const { rows, total, pageCount } = await getCustomersPage(store.id, q, page, sort);
 
   return (
     <>
       <PageHeader
         eyebrow="Quién te compra"
         title="Clientes"
-        description="Primero los que más te han comprado. Toca a un cliente para ver sus pedidos o corregir sus datos."
+        description="Toca a un cliente para ver sus pedidos o corregir sus datos."
         actions={
           <Link href="/clientes/nuevo" className={buttonVariants()}>
             <Plus aria-hidden="true" />
@@ -44,6 +53,7 @@ export default async function ClientesPage({ searchParams }: ClientesPageProps) 
       />
 
       <form action="/clientes" className="mb-4 flex flex-col gap-3 sm:flex-row">
+        {sort !== "compras" && <input type="hidden" name="orden" value={sort} />}
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
           <Input name="q" defaultValue={q} placeholder="Busca por nombre, ciudad o correo" aria-label="Buscar clientes" className="pl-9" />
@@ -79,7 +89,14 @@ export default async function ClientesPage({ searchParams }: ClientesPageProps) 
         </div>
       ) : (
         <>
-          <ul className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 bg-white" data-testid="customers-list">
+          <div className="mb-3 flex justify-end">
+            <SortSelect
+              id="customers-sort"
+              value={sort}
+              options={CUSTOMER_SORTS.map((value) => ({ value, label: CUSTOMER_SORT_LABELS[value], href: clientesHref(q, 1, value) }))}
+            />
+          </div>
+          <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/80 bg-white" data-testid="customers-list">
             {rows.map((customer) => (
               <li key={customer.id}>
                 <Link
@@ -112,7 +129,7 @@ export default async function ClientesPage({ searchParams }: ClientesPageProps) 
             ))}
           </ul>
           <p className="mt-2 text-xs text-slate-500">El monto es lo que ha comprado, sin contar pedidos cancelados.</p>
-          <Pagination page={page} pageCount={pageCount} total={total} hrefForPage={(next) => clientesHref(q, next)} />
+          <Pagination page={page} pageCount={pageCount} total={total} hrefForPage={(next) => clientesHref(q, next, sort)} />
         </>
       )}
     </>

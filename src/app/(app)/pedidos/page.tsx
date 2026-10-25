@@ -6,8 +6,9 @@ import { OrdersTable } from "@/components/orders/orders-table";
 import { OrdersTableSkeleton } from "@/components/orders/orders-table-skeleton";
 import { PageHeader } from "@/components/page-header";
 import { Pagination } from "@/components/pagination";
+import { SortSelect } from "@/components/sort-select";
 import { buttonVariants } from "@/components/ui/button";
-import { parseOrderFilters, type OrderFilters } from "@/lib/filters";
+import { ORDER_SORT_LABELS, ORDER_SORTS, parseOrderFilters, type OrderFilters, type OrderSort } from "@/lib/filters";
 import { getOrdersPage, getStatusCounts } from "@/server/queries/orders";
 import { requireStoreContext } from "@/server/store";
 
@@ -23,6 +24,8 @@ async function OrdersResults({ filters }: { filters: OrderFilters }) {
     getStatusCounts(store.id),
     getOrdersPage(filters, store.id),
   ]);
+  // Dirección de la tabla con cada orden posible (al cambiar el orden se regresa a la página 1).
+  const sortHrefs = Object.fromEntries(ORDER_SORTS.map((sort) => [sort, ordersHref(filters, { sort })])) as Record<OrderSort, string>;
   // Tienda sin ningún pedido: en lugar de una tabla vacía, se explica cómo empezar.
   const storeTotal = [...counts.values()].reduce((sum, value) => sum + value, 0);
   if (storeTotal === 0) {
@@ -42,7 +45,14 @@ async function OrdersResults({ filters }: { filters: OrderFilters }) {
   return (
     <>
       <StatusChips filters={filters} counts={counts} />
-      <OrdersTable rows={rows} />
+      <div className="mb-3 flex justify-end">
+        <SortSelect
+          id="orders-sort"
+          value={filters.sort}
+          options={ORDER_SORTS.map((sort) => ({ value: sort, label: ORDER_SORT_LABELS[sort], href: sortHrefs[sort] }))}
+        />
+      </div>
+      <OrdersTable rows={rows} sort={filters.sort} sortHrefs={sortHrefs} />
       {total > 0 && (
         <Pagination
           page={filters.page}

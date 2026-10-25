@@ -100,9 +100,9 @@ curl "https://omnimarket-hub-brown.vercel.app/api/test/kanban-status"
 | **1. Arquitectura & Next.js 14+ (25 %)** | Next.js 15 con App Router, TypeScript estricto y Tailwind CSS 4. Server Components para leer datos y Server Actions validadas con Zod para escribir. Sin errores de consola |
 | **2. Endpoints de auditoría (25 %)** | `src/app/api/test/*`. Consultas en paralelo con índices en PostgreSQL; región `iad1` junto a la base de datos |
 | **3. Drag & Drop y CRUD avanzado (20 %)** | Kanban con `@dnd-kit` y mutación optimista (TanStack Query) con reversión y Toast. **Edición en lote**: en *Pedidos*, marcar varias casillas → *Pasar a…* o *Borrar*. CRUD de productos (crear, editar, borrar) y creación de pedidos (con cliente nuevo) |
-| **Funciones de tienda** | **Detalle de pedido** (`/pedidos/[id]`): productos, cantidades, precio de cada uno, total, ganancia y cambio de paso. **Inventario**: crear un pedido aparta las piezas (si no alcanzan, no se guarda y se explica por qué); cancelar o borrar un pedido las regresa y reactivarlo las vuelve a apartar, todo dentro de una transacción. Aviso “Se están acabando” con 5 piezas o menos. **Clientes** (`/clientes`): lista con lo que ha comprado cada uno, búsqueda, historial de pedidos, edición y alta. **Fotos de productos**: se reducen en el navegador (máx. 800 px, WebP) y se guardan en PostgreSQL; solo las ve la tienda dueña. Sin foto, cada producto muestra un ícono de lo que es |
+| **Funciones de tienda** | **Detalle de pedido** (`/pedidos/[id]`): productos, cantidades, precio de cada uno, total, ganancia y cambio de paso. **Inventario**: crear un pedido aparta las piezas (si no alcanzan, no se guarda y se explica por qué); cancelar o borrar un pedido las regresa y reactivarlo las vuelve a apartar, todo dentro de una transacción. Aviso “Se están acabando” con 5 piezas o menos. **Clientes** (`/clientes`): lista con lo que ha comprado cada uno, búsqueda, historial de pedidos, edición y alta. **Fotos de productos**: se reducen en el navegador (máx. 800 px, WebP) y se guardan en PostgreSQL; solo las ve la tienda dueña. Sin foto, cada producto muestra un ícono de lo que es. **Página de cada producto** con piezas vendidas, lo vendido, lo que dejó y sus pedidos. **Comprobante del pedido** (`/comprobante/[id]`) para imprimir o guardar en PDF, siempre en colores claros; aclara que no es una factura fiscal. **Ordenar** pedidos por fecha, total o cliente, y clientes por compras, compra reciente o nombre |
 | **Cuentas y datos** | Cada usuario tiene su tienda (`Store`, una por usuario). Todas las consultas y acciones filtran por la tienda que decide el servidor con la sesión; un id de otra tienda simplemente no se encuentra. Las cuentas de Google y GitHub no se unen solo por tener el mismo correo |
-| **4. Pruebas y CI/CD (15 %)** | 48 pruebas unitarias (Vitest) + 29 pruebas E2E (Playwright) que cubren los 3 flujos. `.github/workflows/ci.yml` bloquea el despliegue si algo falla, y la rama `main` está protegida: un Pull Request no se puede aceptar si las pruebas fallan |
+| **4. Pruebas y CI/CD (15 %)** | 49 pruebas unitarias (Vitest) + 33 pruebas E2E (Playwright) que cubren los 3 flujos. `.github/workflows/ci.yml` bloquea el despliegue si algo falla, y la rama `main` está protegida: un Pull Request no se puede aceptar si las pruebas fallan |
 | **5. Despliegue (15 %)** | Vercel con SSL. Solo la CI publica (`vercel.json` desactiva los despliegues automáticos) y después comprueba que producción responda |
 | **UI/UX** | Skeletons en cada carga (`loading.tsx` y `Suspense`) y mientras se guarda un cambio (tabla, tablero y formularios), sin spinners. Toasts (Sonner) en cada cambio del tablero y edición en lote. Diseño adaptable a celular. Animaciones con un propósito (carrusel de “Lo más vendido”, barras que crecen, resaltado del pedido que moviste, tarjetas que se elevan al pasar el mouse) que se apagan si el sistema pide menos movimiento. Sin librerías de pago: todo con CSS y Tailwind. **Modo claro y oscuro** con el botón del sol o la luna (la primera vez sigue el modo del sistema; la elección se guarda solo en el navegador), con contraste revisado en los dos |
 
@@ -110,13 +110,13 @@ curl "https://omnimarket-hub-brown.vercel.app/api/test/kanban-status"
 
 ## Pruebas
 
-### Unitarias — Vitest (`tests/unit`, 48 pruebas)
+### Unitarias — Vitest (`tests/unit`, 49 pruebas)
 | Archivo | Cubre |
 |---|---|
 | `finance.test.ts` | Margen, ganancia, totales del pedido, **ticket promedio** (la misma fórmula que usan el panel y la API), pesos ↔ centavos |
 | `format.test.ts` | **Formato de moneda** MXN, cantidades abreviadas, números, porcentajes, fechas en horario de CDMX |
 | `validation.test.ts` | **Esquemas Zod**: producto, pedido (con “Cliente nuevo”), edición en lote, movimiento en el tablero, parámetros de la API |
-| `filters.test.ts` | **Lógica de filtrado**: filtros de la dirección, número de pedido, búsqueda de pedidos y productos |
+| `filters.test.ts` | **Lógica de filtrado y orden**: filtros de la dirección (un orden inventado se ignora), número de pedido, búsqueda de pedidos y productos, orden por fecha/total/cliente que siempre desempata por número |
 | `kanban-analytics.test.ts` | Mover tarjetas, siguiente paso, rangos de fechas, días sin ventas, comparación entre periodos |
 | `reset-guard.test.ts` | Protecciones de `reset-data`: espera entre reinicios y bloqueo de otras páginas web |
 | `reset-data-route.test.ts` | Respuestas de `reset-data`: 200, 429 y, si el reinicio falla, 500 liberando la espera |
@@ -125,7 +125,7 @@ curl "https://omnimarket-hub-brown.vercel.app/api/test/kanban-status"
 | `customer-validation.test.ts` | Datos del cliente: limpieza, correo opcional y mensajes en español |
 | `product-image.test.ts` | Fotos: tipo real de imagen por sus primeros bytes (rechaza SVG y texto), dirección de la foto; ícono de cada producto según su nombre |
 
-### E2E — Playwright (`tests/e2e`, 29 pruebas)
+### E2E — Playwright (`tests/e2e`, 33 pruebas)
 | Flujo | Archivo | Comprueba |
 |---|---|---|
 | 1. Autenticación | `auth.spec.ts` | Rutas privadas redirigen al login; OAuth de Google y GitHub con la dirección de regreso correcta; **sesión simulada** (usuario en la base + cookie JWT firmada con `AUTH_SECRET`, igual que al terminar OAuth) y cierre de sesión; aviso de privacidad público |
@@ -134,6 +134,7 @@ curl "https://omnimarket-hub-brown.vercel.app/api/test/kanban-status"
 | Endpoints | `api.spec.ts` | `reset-data` rechaza otras páginas web y `GET` sin cambiar nada; el ticket promedio del resumen cuadra con los pedidos, calculado pedido por pedido |
 | Cuentas y tiendas | `tiendas.spec.ts` | **Primer inicio**: una sola tienda, vacía, sin datos ajenos ni cifras inventadas. **Recurrente**: no duplica tienda y conserva datos. **Aislamiento**: otra cuenta no ve nada y las métricas (vendido, ganancia, margen, ticket) cuadran con la base. **Persistencia** al cerrar y volver a entrar. **Protección**: abrir el producto de otra cuenta, consultarlo por el endpoint y **manipular la petición** para mover su pedido → todo rechazado. Cambio entre “Mi tienda” y la de demostración |
 | Funciones de tienda | `funciones.spec.ts` | **Detalle de pedido** con cantidades, precios y total iguales a la base (desde la tabla y desde el tablero). **Inventario**: baja al vender, no deja vender de más, regresa al cancelar o borrar, se vuelve a apartar al reactivar; agotado no se puede elegir. **Clientes**: lo comprado, historial, edición, correo repetido, borrado; búsqueda y páginas. **Aislamiento**: otra cuenta no abre pedidos ni clientes ajenos. **Fotos**: se suben reducidas a WebP, solo las ve su tienda (otra cuenta o sin sesión → 404), se rechaza un archivo que no es foto, se pueden quitar y se guardan al crear un producto |
+| Detalles | `detalles.spec.ts` | **Números del producto** iguales a la base (piezas, lo vendido y la ganancia, pedido por pedido) y cada pedido una sola vez. **Comprobante**: productos, total, aviso de que no es factura, sin costos ni ganancias, sin botones al imprimir; otra cuenta no lo abre. **Ordenar** pedidos (encabezados y selector, se conserva al buscar) y clientes (se conserva al cambiar de página) |
 | Experiencia | `ux.spec.ts` | Páginas "no encontrado" en español con flecha para regresar (y 404 en direcciones inexistentes); el formulario de edición llega lleno desde el servidor; todos los campos de la tabla de pedidos tienen `id` o `name`; el botón de modo oscuro cambia los colores y se recuerda, y sin elección se usa el modo del sistema |
 
 Las pruebas que usan datos de ejemplo llaman antes a `POST /api/test/reset-data` y trabajan en la Tienda de demostración; las de cuentas borran antes a sus usuarios de prueba para empezar como cuentas nuevas.

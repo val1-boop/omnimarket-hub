@@ -2,7 +2,7 @@
 
 import type { OrderStatus } from "@prisma/client";
 import { useMutation } from "@tanstack/react-query";
-import { Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Select } from "@/components/ui/input";
 import { SavingSkeleton } from "@/components/ui/skeleton";
+import { ORDER_SORT_LABELS, type OrderSort } from "@/lib/filters";
 import { formatCurrency, formatDate, formatNumber, formatOrderNumber } from "@/lib/format";
 import { ORDER_STATUS_LABELS, ORDER_STATUSES } from "@/lib/order-status";
 import { runAction } from "@/lib/run-action";
@@ -21,7 +22,14 @@ import type { OrderRow } from "@/server/queries/orders";
 
 const pedidos = (count: number) => (count === 1 ? "1 pedido" : `${formatNumber(count)} pedidos`);
 
-export function OrdersTable({ rows }: { rows: OrderRow[] }) {
+type OrdersTableProps = {
+  rows: OrderRow[];
+  sort: OrderSort;
+  /** Dirección de la tabla con cada orden (se arma en el servidor con los filtros actuales). */
+  sortHrefs: Record<OrderSort, string>;
+};
+
+export function OrdersTable({ rows, sort, sortHrefs }: OrdersTableProps) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [targetStatus, setTargetStatus] = useState<OrderStatus | "">("");
@@ -148,10 +156,10 @@ export function OrdersTable({ rows }: { rows: OrderRow[] }) {
                 </span>
               </th>
               <th scope="col" className="px-4 py-3 font-semibold max-md:hidden">Pedido</th>
-              <th scope="col" className="px-4 py-3 font-semibold max-md:hidden">Cliente</th>
-              <th scope="col" className="px-4 py-3 font-semibold max-md:hidden">Fecha</th>
+              <SortableHeader label="Cliente" sort={sort} sortHrefs={sortHrefs} options={["cliente"]} />
+              <SortableHeader label="Fecha" sort={sort} sortHrefs={sortHrefs} options={["recientes", "antiguos"]} />
               <th scope="col" className="px-4 py-3 text-right font-semibold max-md:hidden">Productos</th>
-              <th scope="col" className="px-4 py-3 text-right font-semibold max-md:hidden">Total</th>
+              <SortableHeader label="Total" sort={sort} sortHrefs={sortHrefs} options={["mayor", "menor"]} align="right" />
               <th scope="col" className="px-4 py-3 font-semibold max-md:hidden">Paso</th>
             </tr>
           </thead>
@@ -287,5 +295,41 @@ export function OrdersTable({ rows }: { rows: OrderRow[] }) {
         }}
       />
     </>
+  );
+}
+type SortableHeaderProps = {
+  label: string;
+  sort: OrderSort;
+  sortHrefs: Record<OrderSort, string>;
+  /** Órdenes de esta columna: el primero al tocarla; si ya está activo, el segundo invierte el sentido. */
+  options: OrderSort[];
+  align?: "left" | "right";
+};
+
+// Encabezado que ordena la tabla al tocarlo. La flecha dice cómo está ordenada ahora.
+function SortableHeader({ label, sort, sortHrefs, options, align = "left" }: SortableHeaderProps) {
+  const activeIndex = options.indexOf(sort);
+  const active = activeIndex !== -1;
+  const next = active ? options[(activeIndex + 1) % options.length] : options[0];
+  const descending = sort === "recientes" || sort === "mayor";
+  const Icon = !active ? ArrowUpDown : descending ? ArrowDown : ArrowUp;
+
+  return (
+    <th
+      scope="col"
+      aria-sort={active ? (descending ? "descending" : "ascending") : undefined}
+      className={cn("px-4 py-3 font-semibold max-md:hidden", align === "right" && "text-right")}
+    >
+      <Link
+        href={sortHrefs[next]}
+        scroll={false}
+        className={cn("inline-flex items-center gap-1 hover:text-ink-900", active && "text-ink-900")}
+        title={`Ordenar: ${ORDER_SORT_LABELS[next]}`}
+      >
+        {label}
+        <Icon className={cn("h-3.5 w-3.5", !active && "opacity-50")} aria-hidden="true" />
+        <span className="sr-only">(ordenar: {ORDER_SORT_LABELS[next]})</span>
+      </Link>
+    </th>
   );
 }
