@@ -26,7 +26,8 @@ const SHORTCUTS = [
     icon: ClipboardList,
     title: "Pedidos",
     text: "Revisa, crea y cambia varios pedidos a la vez.",
-    className: "bg-ink-900 text-white",
+    // keep-dark: sigue siendo la tarjeta oscura también en modo oscuro.
+    className: "keep-dark bg-ink-900 text-white ring-1 ring-white/10",
   },
   {
     href: "/kanban",
@@ -85,7 +86,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         {/* Brillo decorativo de fondo */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-lilac-300/40 blur-3xl"
+          className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-lilac-300/40 blur-3xl dark:bg-lilac-600/25"
         />
         <div className="relative min-w-0 p-8 md:p-12">
           <p className="inline-flex rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-lilac-700 ring-1 ring-lilac-200">
@@ -176,7 +177,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
       {/* Franja oscura con el resumen de la tienda (números reales de ahorita) */}
       {!isEmpty && (
-        <section aria-label="Resumen de tu tienda" className="rounded-3xl bg-ink-900 p-6 text-white md:p-8" data-testid="store-summary">
+        <section aria-label="Resumen de tu tienda" className="keep-dark rounded-3xl bg-ink-900 p-6 text-white ring-1 ring-white/10 md:p-8" data-testid="store-summary">
           <dl className="grid grid-cols-2 gap-6 lg:grid-cols-4">
             {[
               { label: "Pedidos por entregar", value: onTheWay, href: "/kanban" },
@@ -268,7 +269,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 // Círculo oscuro con flecha, dentro del botón verde lima (la flecha avanza al pasar el mouse).
 function ArrowCircle() {
   return (
-    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-900 text-lima-300">
+    <span className="keep-dark flex h-8 w-8 items-center justify-center rounded-full bg-ink-900 text-lima-300">
       <ArrowRight className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
     </span>
   );

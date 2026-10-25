@@ -66,4 +66,30 @@ test.describe("Experiencia de uso", () => {
       expect(count.x + count.width, `recorrido a ${width}px`).toBeLessThanOrEqual(width);
     }
   });
+
+  test("el botón de modo oscuro cambia los colores y se recuerda al volver", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.goto("/dashboard");
+    const html = page.locator("html");
+    const pageBackground = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+    await expect(html).toHaveAttribute("data-theme", "light");
+    const light = await pageBackground();
+
+    await page.getByRole("button", { name: "Cambiar a modo oscuro" }).click();
+    await expect(html).toHaveAttribute("data-theme", "dark");
+    expect(await pageBackground()).not.toBe(light);
+
+    // Al recargar y en otra página sigue en oscuro, y se puede regresar a claro.
+    await page.goto("/clientes");
+    await expect(html).toHaveAttribute("data-theme", "dark");
+    await page.getByRole("button", { name: "Cambiar a modo claro" }).click();
+    await expect(html).toHaveAttribute("data-theme", "light");
+    expect(await pageBackground()).toBe(light);
+  });
+
+  test("si nunca eligió, usa el modo de su celular o computadora", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.goto("/login");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  });
 });

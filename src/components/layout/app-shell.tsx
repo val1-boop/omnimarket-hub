@@ -9,6 +9,7 @@ import { Logo } from "@/components/brand/logo";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { StoreBar, type ActiveStore } from "@/components/layout/store-bar";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { signOutAction } from "@/server/actions/auth";
@@ -41,7 +42,7 @@ export function AppShell({ user, store, children }: AppShellProps) {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/85 backdrop-blur-md">
-        <div className="mx-auto flex h-18 max-w-7xl items-center justify-between gap-6 px-4 md:px-8">
+        <div className="mx-auto flex h-18 max-w-7xl items-center justify-between gap-3 px-4 md:gap-6 md:px-8">
           <Logo />
 
           {/* Navegación de escritorio */}
@@ -62,6 +63,7 @@ export function AppShell({ user, store, children }: AppShellProps) {
           </nav>
 
           <div className="hidden items-center gap-3 md:flex">
+            <ThemeToggle />
             <UserAvatar user={user} />
             <div className="hidden max-w-40 lg:block">
               <p className="truncate text-sm font-medium text-ink-900">{user.name ?? "Tu cuenta"}</p>
@@ -75,16 +77,18 @@ export function AppShell({ user, store, children }: AppShellProps) {
             </form>
           </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setMobileOpen((open) => !open)}
-            aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
-            aria-expanded={mobileOpen}
-          >
-            {mobileOpen ? <X /> : <Menu />}
-          </Button>
+          <div className="flex items-center gap-1 md:hidden">
+            <ThemeToggle />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileOpen((open) => !open)}
+              aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
+              aria-expanded={mobileOpen}
+            >
+              {mobileOpen ? <X /> : <Menu />}
+            </Button>
+          </div>
         </div>
 
         {/* Menú desplegable en móvil */}

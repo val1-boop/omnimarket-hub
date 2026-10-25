@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { BackLink } from "@/components/back-link";
 import { Logo } from "@/components/brand/logo";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 export const metadata: Metadata = { title: "Aviso de privacidad · OmniMarket" };
 
@@ -32,8 +33,9 @@ export default async function PrivacidadPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="border-b border-slate-200">
-        <div className="mx-auto flex h-20 max-w-7xl items-center px-4 md:px-8">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 md:px-8">
           <Logo href={back.href} />
+          <ThemeToggle />
         </div>
       </header>
 
@@ -122,6 +124,10 @@ export default async function PrivacidadPage() {
               forma segura (dura hasta 30 días o hasta que toques “Cerrar sesión”) y otra recuerda si estás viendo
               “Mi tienda” o la Tienda de demostración (dura hasta un año y se borra al cerrar sesión). No usamos
               cookies de publicidad ni de seguimiento.
+            </p>
+            <p>
+              Si eliges modo claro u oscuro, esa preferencia se guarda solo en tu navegador (no se manda a
+              nuestro servidor) y puedes cambiarla cuando quieras con el botón del sol o la luna.
             </p>
           </Section>
 
