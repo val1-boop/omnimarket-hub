@@ -66,6 +66,11 @@ El tiempo total que muestran Postman o `curl` suma además el viaje por internet
 ### 4. Pipeline de integración continua
 En [Actions](https://github.com/val1-boop/omnimarket-hub/actions) cada commit de `main` muestra los dos trabajos en verde: **Lint, tipos y pruebas** → **Desplegar a producción (Vercel)**. Después corre **Verificar producción**, que revisa la app ya publicada; su resumen está en la página de la ejecución.
 
+Para saber qué versión está publicada, cada respuesta de la app trae el encabezado `X-App-Version` con el commit de GitHub que la CI desplegó (Verificar producción comprueba que coincida):
+```bash
+curl -sI https://omnimarket-hub-brown.vercel.app/login | grep -i x-app-version
+```
+
 ---
 
 ## Endpoints de auditoría
@@ -102,7 +107,7 @@ curl "https://omnimarket-hub-brown.vercel.app/api/test/kanban-status"
 | **3. Drag & Drop y CRUD avanzado (20 %)** | Kanban con `@dnd-kit` y mutación optimista (TanStack Query) con reversión y Toast. **Edición en lote**: en *Pedidos*, marcar varias casillas → *Pasar a…* o *Borrar*. CRUD de productos (crear, editar, borrar) y creación de pedidos (con cliente nuevo) |
 | **Funciones de tienda** | **Detalle de pedido** (`/pedidos/[id]`): productos, cantidades, precio de cada uno, total, ganancia y cambio de paso. **Inventario**: crear un pedido aparta las piezas (si no alcanzan, no se guarda y se explica por qué); cancelar o borrar un pedido las regresa y reactivarlo las vuelve a apartar, todo dentro de una transacción. Aviso “Se están acabando” con 5 piezas o menos. **Clientes** (`/clientes`): lista con lo que ha comprado cada uno, búsqueda, historial de pedidos, edición y alta. **Fotos de productos**: se reducen en el navegador (máx. 800 px, WebP) y se guardan en PostgreSQL; solo las ve la tienda dueña. Sin foto, cada producto muestra un ícono de lo que es. **Página de cada producto** con piezas vendidas, lo vendido, lo que dejó y sus pedidos. **Comprobante del pedido** (`/comprobante/[id]`) para imprimir o guardar en PDF, siempre en colores claros; aclara que no es una factura fiscal. **Ordenar** pedidos por fecha, total o cliente, y clientes por compras, compra reciente o nombre. **Descargar Excel** (`/api/pedidos/exportar`, CSV con la sesión y la tienda activa). **Nuevo pedido desde la ficha del cliente**. **Búsqueda mientras escribes** en pedidos y clientes |
 | **Cuentas y datos** | Cada usuario tiene su tienda (`Store`, una por usuario). Todas las consultas y acciones filtran por la tienda que decide el servidor con la sesión; un id de otra tienda simplemente no se encuentra. Las cuentas de Google y GitHub no se unen solo por tener el mismo correo |
-| **4. Pruebas y CI/CD (15 %)** | 53 pruebas unitarias (Vitest) + 37 pruebas E2E (Playwright) que cubren los 3 flujos. `.github/workflows/ci.yml` bloquea el despliegue si algo falla, y la rama `main` está protegida: un Pull Request no se puede aceptar si las pruebas fallan |
+| **4. Pruebas y CI/CD (15 %)** | 53 pruebas unitarias (Vitest) + 41 pruebas E2E (Playwright) que cubren los 3 flujos. `.github/workflows/ci.yml` bloquea el despliegue si algo falla, y la rama `main` está protegida: un Pull Request no se puede aceptar si las pruebas fallan |
 | **5. Despliegue (15 %)** | Vercel con SSL. Solo la CI publica (`vercel.json` desactiva los despliegues automáticos) y después comprueba que producción responda |
 | **UI/UX** | Skeletons en cada carga (`loading.tsx` y `Suspense`) y mientras se guarda un cambio (tabla, tablero y formularios), sin spinners. Toasts (Sonner) en cada cambio del tablero y edición en lote. Diseño adaptable a celular. Animaciones con un propósito (carrusel de “Lo más vendido”, barras que crecen, resaltado del pedido que moviste, tarjetas que se elevan al pasar el mouse) que se apagan si el sistema pide menos movimiento. Sin librerías de pago: todo con CSS y Tailwind. **Modo claro y oscuro** con el botón del sol o la luna (la primera vez sigue el modo del sistema; la elección se guarda solo en el navegador), con contraste revisado en los dos |
 
@@ -126,12 +131,13 @@ curl "https://omnimarket-hub-brown.vercel.app/api/test/kanban-status"
 | `customer-validation.test.ts` | Datos del cliente: limpieza, correo opcional y mensajes en español |
 | `product-image.test.ts` | Fotos: tipo real de imagen por sus primeros bytes (rechaza SVG y texto), dirección de la foto; ícono de cada producto según su nombre |
 
-### E2E — Playwright (`tests/e2e`, 37 pruebas)
+### E2E — Playwright (`tests/e2e`, 41 pruebas)
 | Flujo | Archivo | Comprueba |
 |---|---|---|
 | 1. Autenticación | `auth.spec.ts` | Rutas privadas redirigen al login; OAuth de Google y GitHub con la dirección de regreso correcta; **sesión simulada** (usuario en la base + cookie JWT firmada con `AUTH_SECRET`, igual que al terminar OAuth) y cierre de sesión; aviso de privacidad público |
 | 2. Creación | `creation.spec.ts` | Con una **cuenta nueva**: primer producto en el catálogo; primer pedido con cliente nuevo hasta arriba de la tabla; ambos siguen tras recargar |
-| 3. Drag & Drop | `kanban.spec.ts` | La tarjeta cambia de columna, `/api/test/kanban-status` lo confirma y sigue ahí al recargar; mientras se guarda muestra un esqueleto |
+| 3. Drag & Drop | `kanban.spec.ts` | La tarjeta cambia de columna, `/api/test/kanban-status` lo confirma y sigue ahí al recargar; mientras se guarda muestra un esqueleto; **si el servidor falla, la tarjeta regresa a su columna, se avisa y la base no cambia** |
+| Edición en lote | `lote.spec.ts` | Cambiar **3 pedidos a la vez**: se ve al instante, aviso “¡Listo! 3 pedidos…”, los 3 guardados (base y `kanban-status`) y siguen así al recargar. **Si falla, ninguno cambia** y regresan como estaban. Borrar varios pide confirmación y “Mejor no” no borra nada |
 | Endpoints | `api.spec.ts` | `reset-data` rechaza otras páginas web y `GET` sin cambiar nada; el ticket promedio del resumen cuadra con los pedidos, calculado pedido por pedido |
 | Cuentas y tiendas | `tiendas.spec.ts` | **Primer inicio**: una sola tienda, vacía, sin datos ajenos ni cifras inventadas. **Recurrente**: no duplica tienda y conserva datos. **Aislamiento**: otra cuenta no ve nada y las métricas (vendido, ganancia, margen, ticket) cuadran con la base. **Persistencia** al cerrar y volver a entrar. **Protección**: abrir el producto de otra cuenta, consultarlo por el endpoint y **manipular la petición** para mover su pedido → todo rechazado. Cambio entre “Mi tienda” y la de demostración |
 | Funciones de tienda | `funciones.spec.ts` | **Detalle de pedido** con cantidades, precios y total iguales a la base (desde la tabla y desde el tablero). **Inventario**: baja al vender, no deja vender de más, regresa al cancelar o borrar, se vuelve a apartar al reactivar; agotado no se puede elegir. **Clientes**: lo comprado, historial, edición, correo repetido, borrado; búsqueda y páginas. **Aislamiento**: otra cuenta no abre pedidos ni clientes ajenos. **Fotos**: se suben reducidas a WebP, solo las ve su tienda (otra cuenta o sin sesión → 404), se rechaza un archivo que no es foto, se pueden quitar y se guardan al crear un producto |

@@ -56,5 +56,7 @@ jobs:
       - name: Verificar la app publicada
         run: node scripts/verificar-produccion.mjs
         env:
+          # Producción debe tener exactamente el commit que la CI acaba de publicar.
+          EXPECTED_VERSION: ${{ github.event.workflow_run.head_sha || github.sha }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
