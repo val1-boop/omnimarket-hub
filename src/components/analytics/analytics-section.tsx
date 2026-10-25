@@ -72,7 +72,7 @@ export async function AnalyticsSection({ period, storeId }: { period: AnalyticsP
               </summary>
               <div className="mt-3 max-h-64 overflow-y-auto">
                 <table className="w-full text-left tabular-nums">
-                  <thead className="text-xs uppercase tracking-wider text-slate-500">
+                  <thead className="text-xs text-slate-500">
                     <tr>
                       <th scope="col" className="py-2 font-semibold">Día</th>
                       <th scope="col" className="py-2 text-right font-semibold">Pedidos</th>

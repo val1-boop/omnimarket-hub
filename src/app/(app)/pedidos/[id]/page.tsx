@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { BackLink } from "@/components/back-link";
 import { OrderStatusControl } from "@/components/orders/order-status-control";
+import { ProductVisual } from "@/components/products/product-visual";
 import { StatusBadge } from "@/components/orders/status-badge";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { calculateMargin } from "@/lib/finance";
 import { formatCurrency, formatDate, formatNumber, formatOrderNumber, formatPercent } from "@/lib/format";
 import { holdsStock } from "@/lib/inventory";
 import { prisma } from "@/lib/prisma";
+import { productImageUrl } from "@/lib/product-image";
 import { requireStoreContext } from "@/server/store";
 
 type PedidoPageProps = { params: Promise<{ id: string }> };
@@ -22,7 +24,7 @@ export default async function PedidoPage({ params }: PedidoPageProps) {
     include: {
       customer: { select: { id: true, name: true, city: true, email: true } },
       items: {
-        include: { product: { select: { id: true, name: true, sku: true, category: true } } },
+        include: { product: { select: { id: true, name: true, sku: true, category: true, imageUpdatedAt: true } } },
         orderBy: { product: { name: "asc" } },
       },
     },
@@ -47,8 +49,16 @@ export default async function PedidoPage({ params }: PedidoPageProps) {
             <CardTitle>Lo que se lleva</CardTitle>
             <ul className="mt-4 divide-y divide-slate-100" data-testid="order-lines">
               {order.items.map((item) => (
-                <li key={item.id} className="flex items-start justify-between gap-4 py-4" data-testid="order-line">
-                  <div className="min-w-0">
+                <li key={item.id} className="flex items-start gap-4 py-4" data-testid="order-line">
+                  <ProductVisual
+                    name={item.product.name}
+                    category={item.product.category}
+                    imageUrl={productImageUrl(item.product)}
+                    className="h-14 w-14 shrink-0 rounded-xl"
+                    iconClassName="h-6 w-6"
+                    sizes="56px"
+                  />
+                  <div className="min-w-0 flex-1">
                     <Link
                       href={`/productos/${item.product.id}`}
                       className="font-medium text-ink-900 underline-offset-4 hover:underline"

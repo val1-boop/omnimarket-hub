@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { ProductForm } from "@/components/products/product-form";
 import { centsToPesos } from "@/lib/finance";
 import { prisma } from "@/lib/prisma";
+import { productImageUrl } from "@/lib/product-image";
 import { PRODUCT_CATEGORIES } from "@/lib/validation/product";
 import { requireStoreContext } from "@/server/store";
 
@@ -30,6 +31,7 @@ export default async function EditarProductoPage({ params }: EditarProductoPageP
           price: centsToPesos(product.priceCents),
           cost: centsToPesos(product.costCents),
           stock: product.stock,
+          imageUrl: productImageUrl(product),
         }}
       />
     </>

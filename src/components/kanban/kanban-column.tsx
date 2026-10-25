@@ -31,7 +31,7 @@ export function KanbanColumn({ column, step, children }: KanbanColumnProps) {
       )}
     >
       <header className="mb-3 flex items-center justify-between gap-2 px-1">
-        <h2 className="font-display text-xs font-bold uppercase tracking-wider text-ink-900">
+        <h2 className="font-display text-sm font-bold text-ink-900">
           {step}. {label}
         </h2>
         <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", ORDER_STATUS_STYLES[column.status])}>
@@ -39,7 +39,12 @@ export function KanbanColumn({ column, step, children }: KanbanColumnProps) {
         </span>
       </header>
 
-      <div className="flex min-h-24 flex-1 flex-col gap-3">
+      {/* Cada columna se desplaza por dentro: así el tablero completo cabe en la pantalla.
+          El margen negativo deja espacio para el brillo de la tarjeta que acabas de mover. */}
+      <div
+        className="-mx-1 flex min-h-24 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-1 py-1 max-h-[65dvh] md:max-h-[calc(100dvh-19rem)] md:min-h-80"
+        data-testid={`kanban-column-scroll-${column.status}`}
+      >
         {column.cards.length > 0 ? (
           children
         ) : (

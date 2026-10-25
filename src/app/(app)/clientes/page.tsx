@@ -53,7 +53,7 @@ export default async function ClientesPage({ searchParams }: ClientesPageProps) 
           {q && (
             <Link
               href="/clientes"
-              className="inline-flex h-11 items-center px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-ink-900"
+              className="inline-flex h-11 items-center px-3 text-sm font-semibold text-slate-500 hover:text-ink-900"
             >
               Limpiar
             </Link>

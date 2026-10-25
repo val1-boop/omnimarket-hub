@@ -1,7 +1,7 @@
 import Link from "next/link";
+import { ProductVisual } from "@/components/products/product-visual";
 import { StockBadge } from "@/components/products/stock-badge";
 import { buttonVariants } from "@/components/ui/button";
-import { getCategoryIcon } from "@/lib/categories";
 import { calculateMargin } from "@/lib/finance";
 import { formatCurrency, formatNumber, formatPercent } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -14,10 +14,11 @@ export type CatalogProduct = {
   priceCents: number;
   costCents: number;
   stock: number;
+  /** Dirección de su foto, o null si no tiene. */
+  imageUrl: string | null;
 };
 
 export function ProductCard({ product }: { product: CatalogProduct }) {
-  const Icon = getCategoryIcon(product.category);
   const margin = calculateMargin(product.priceCents, product.costCents);
 
   return (
@@ -25,11 +26,14 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
       className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-lilac-200/60"
       data-testid="product-card"
     >
-      <div className="relative flex h-36 items-center justify-center bg-gradient-to-br from-lilac-100 via-lilac-50 to-white">
-        <Icon
-          className="h-14 w-14 text-ink-900 transition-transform duration-300 group-hover:scale-110"
-          strokeWidth={1.25}
-          aria-hidden="true"
+      <div className="relative">
+        <ProductVisual
+          name={product.name}
+          category={product.category}
+          imageUrl={product.imageUrl}
+          className="h-40"
+          iconClassName="h-14 w-14 transition-transform duration-300 group-hover:scale-110"
+          sizes="(min-width: 1024px) 300px, (min-width: 640px) 50vw, 100vw"
         />
         <span className="absolute left-3 top-3 rounded-full bg-ink-900 px-2.5 py-1 text-[11px] font-semibold text-white">
           Ganas {formatPercent(margin, 0)}

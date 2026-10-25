@@ -187,4 +187,63 @@ test.describe("Funciones de la tienda", () => {
     await expect(otherPage.getByTestId("customers-empty")).toContainText("Todavía no tienes clientes");
     await other.close();
   });
+
+  test("fotos de productos: se suben reducidas, solo las ve su tienda y se pueden quitar", async ({ page, browser, baseURL }) => {
+    const { product } = await prepareOwnStore(page, 10);
+    const photo = "tests/e2e/fixtures/foto-de-prueba.jpg"; // 1200 × 900 px
+    // El campo de foto responde cuando la página terminó de cargar su JavaScript.
+    const openForm = async (path: string) => {
+      await page.goto(path);
+      await page.waitForLoadState("networkidle");
+    };
+
+    // Subir: se guarda reducida en WebP y aparece en la tarjeta del catálogo.
+    await openForm(`/productos/${product.id}`);
+    await page.getByTestId("product-photo-input").setInputFiles(photo);
+    await expect(page.getByText("Guardamos la foto.")).toBeVisible();
+    await expect(page.getByTestId("product-photo")).toBeVisible();
+    const saved = await db.productImage.findUniqueOrThrow({ where: { productId: product.id } });
+    expect(saved.mimeType).toBe("image/webp");
+    expect(saved.data.length).toBeLessThan(600 * 1024);
+    await page.goto("/productos");
+    const src = await page.getByTestId("product-card").getByTestId("product-photo").getAttribute("src");
+    expect(src).toMatch(new RegExp(`^/api/productos/${product.id}/foto\\?v=\\d+$`));
+    const response = await page.request.get(src!);
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toBe("image/webp");
+
+    // Otra cuenta (o alguien sin sesión) no la puede ver.
+    const other = await browser.newContext();
+    await signIn(other, baseURL!, OTHER_USER);
+    expect((await other.request.get(`${baseURL}${src}`)).status()).toBe(404);
+    await other.close();
+    const anonymous = await browser.newContext();
+    expect((await anonymous.request.get(`${baseURL}${src}`)).status()).toBe(404);
+    await anonymous.close();
+
+    // Un archivo que no es foto se rechaza con un aviso claro.
+    await openForm(`/productos/${product.id}`);
+    await page.getByTestId("product-photo-input").setInputFiles({ name: "foto.png", mimeType: "image/png", buffer: Buffer.from("no soy una foto") });
+    await expect(page.getByText("No pudimos abrir esa imagen. Usa una foto JPG, PNG o WebP.")).toBeVisible();
+
+    // Quitar la foto: vuelve el ícono.
+    await page.getByRole("button", { name: "Quitar foto" }).click();
+    await expect(page.getByText("Quitamos la foto.")).toBeVisible();
+    await expect.poll(() => db.productImage.count({ where: { productId: product.id } })).toBe(0);
+    await expect(page.getByTestId("product-photo")).toHaveCount(0);
+
+    // Al crear un producto nuevo, la foto elegida se guarda junto con él.
+    await openForm("/productos/nuevo");
+    await page.getByTestId("product-photo-input").setInputFiles(photo);
+    await expect(page.getByTestId("product-photo")).toBeVisible(); // vista previa
+    await page.getByLabel("Nombre del producto").fill("Taza de barro");
+    await page.getByLabel("Categoría").selectOption("Hogar");
+    await page.getByLabel("Precio de venta (MXN)").fill("120");
+    await page.getByLabel("Lo que te cuesta (MXN)").fill("50");
+    await page.getByRole("button", { name: "Agregar producto" }).click();
+    await expect(page.getByText("¡Listo! Agregamos “Taza de barro” a tu catálogo.")).toBeVisible();
+    const created = await db.product.findFirstOrThrow({ where: { name: "Taza de barro", store: { ownerId: E2E_USER.id } } });
+    expect(created.imageUpdatedAt).not.toBeNull();
+    expect(await db.productImage.count({ where: { productId: created.id } })).toBe(1);
+  });
 });

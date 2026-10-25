@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import type { ActionResult } from "@/lib/action-result";
 import { pesosToCents } from "@/lib/finance";
+import { detectImageType, PRODUCT_IMAGE_MAX_BYTES } from "@/lib/product-image";
 import { prisma } from "@/lib/prisma";
 import { productSchema } from "@/lib/validation/product";
 import { SESSION_EXPIRED_MESSAGE } from "@/server/auth-guard";
@@ -13,6 +14,7 @@ const PRODUCT_NOT_FOUND = "Ese producto ya no existe en esta tienda. Recarga la 
 function revalidateCatalog() {
   revalidatePath("/productos");
   revalidatePath("/pedidos/nuevo");
+  revalidatePath("/dashboard");
 }
 
 // El SKU se arma solo: OM-<3 letras de la categoría>-<consecutivo dentro de la tienda>.
@@ -96,5 +98,60 @@ export async function deleteProduct(id: string): Promise<ActionResult<{ name: st
   } catch (error) {
     console.error("[products.deleteProduct]", error);
     return { ok: false, message: "No pudimos borrar el producto. Inténtalo otra vez." };
+  }
+}
+// Guarda (o reemplaza) la foto de un producto. Llega ya reducida desde el navegador.
+export async function uploadProductImage(id: string, formData: FormData): Promise<ActionResult<{ name: string }>> {
+  const context = await getStoreContext();
+  if (!context) return { ok: false, message: SESSION_EXPIRED_MESSAGE };
+
+  const file = formData.get("foto");
+  if (!(file instanceof Blob) || file.size === 0) return { ok: false, message: "Elige una foto." };
+  if (file.size > PRODUCT_IMAGE_MAX_BYTES) return { ok: false, message: "La foto pesa demasiado. Prueba con otra." };
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const mimeType = detectImageType(bytes);
+  if (!mimeType) return { ok: false, message: "Ese archivo no es una foto JPG, PNG o WebP." };
+
+  const product = await prisma.product.findFirst({ where: { id, storeId: context.store.id }, select: { name: true } });
+  if (!product) return { ok: false, message: PRODUCT_NOT_FOUND };
+
+  try {
+    const now = new Date();
+    await prisma.$transaction([
+      prisma.productImage.upsert({
+        where: { productId: id },
+        create: { productId: id, data: bytes, mimeType },
+        update: { data: bytes, mimeType },
+      }),
+      prisma.product.updateMany({ where: { id, storeId: context.store.id }, data: { imageUpdatedAt: now } }),
+    ]);
+    revalidateCatalog();
+    revalidatePath(`/productos/${id}`);
+    return { ok: true, data: { name: product.name } };
+  } catch (error) {
+    console.error("[products.uploadProductImage]", error);
+    return { ok: false, message: "No pudimos guardar la foto. Inténtalo otra vez." };
+  }
+}
+
+export async function removeProductImage(id: string): Promise<ActionResult<{ name: string }>> {
+  const context = await getStoreContext();
+  if (!context) return { ok: false, message: SESSION_EXPIRED_MESSAGE };
+
+  const product = await prisma.product.findFirst({ where: { id, storeId: context.store.id }, select: { name: true } });
+  if (!product) return { ok: false, message: PRODUCT_NOT_FOUND };
+
+  try {
+    await prisma.$transaction([
+      prisma.productImage.deleteMany({ where: { productId: id } }),
+      prisma.product.updateMany({ where: { id, storeId: context.store.id }, data: { imageUpdatedAt: null } }),
+    ]);
+    revalidateCatalog();
+    revalidatePath(`/productos/${id}`);
+    return { ok: true, data: { name: product.name } };
+  } catch (error) {
+    console.error("[products.removeProductImage]", error);
+    return { ok: false, message: "No pudimos quitar la foto. Inténtalo otra vez." };
   }
 }

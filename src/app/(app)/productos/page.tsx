@@ -4,13 +4,14 @@ import { PageHeader } from "@/components/page-header";
 import { ProductCatalog } from "@/components/products/product-catalog";
 import { buttonVariants } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
+import { productImageUrl } from "@/lib/product-image";
 import { requireStoreContext } from "@/server/store";
 
 export default async function ProductosPage() {
   const { store } = await requireStoreContext();
   const products = await prisma.product.findMany({
     where: { storeId: store.id },
-    select: { id: true, sku: true, name: true, category: true, priceCents: true, costCents: true, stock: true },
+    select: { id: true, sku: true, name: true, category: true, priceCents: true, costCents: true, stock: true, imageUpdatedAt: true },
     orderBy: { name: "asc" },
   });
 
@@ -27,7 +28,7 @@ export default async function ProductosPage() {
           </Link>
         }
       />
-      <ProductCatalog products={products} />
+      <ProductCatalog products={products.map(({ imageUpdatedAt, ...product }) => ({ ...product, imageUrl: productImageUrl({ id: product.id, imageUpdatedAt }) }))} />
     </>
   );
 }
