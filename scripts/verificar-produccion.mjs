@@ -77,10 +77,22 @@ async function checkPages() {
     const { status } = await timed(path);
     s.check(status === 200, `${path} → HTTP ${status}`);
   }
-  for (const path of ["/dashboard", "/pedidos", "/kanban", "/productos"]) {
+  for (const path of ["/dashboard", "/pedidos", "/kanban", "/productos", "/clientes", "/pedidos/nuevo", "/comprobante/ord_0001"]) {
     const { status, headers } = await timed(path);
     const location = headers.get("location") ?? "";
     s.check(status === 307 && location.includes("/login"), `${path} sin sesión → ${status} a ${location.replace(BASE, "") || "(nada)"}`);
+  }
+  // Datos privados fuera de las páginas: sin sesión no se descargan.
+  const csv = await timed("/api/pedidos/exportar");
+  s.check(csv.status === 401, `/api/pedidos/exportar sin sesión → ${csv.status} (esperado 401)`);
+  const photo = await timed("/api/productos/prod_011/foto");
+  s.check(photo.status === 404, `/api/productos/…/foto sin sesión → ${photo.status} (esperado 404)`);
+  // Versión publicada: la que corresponde al commit que se acaba de desplegar.
+  const published = (await timed("/login")).headers.get("x-app-version");
+  if (process.env.EXPECTED_VERSION) {
+    s.check(published === process.env.EXPECTED_VERSION, `Versión publicada ${published ?? "(sin dato)"} = commit ${process.env.EXPECTED_VERSION}`);
+  } else {
+    s.info(`Versión publicada: ${published ?? "(sin dato)"}`);
   }
   s.ok(`Certificado SSL válido (la conexión HTTPS con ${new URL(BASE).host} se verificó al conectar)`);
 }

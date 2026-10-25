@@ -131,6 +131,9 @@ jobs:
 
       - name: Compilar para Vercel
         run: npx vercel@65 build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          # Commit que se publica: la app lo devuelve en el encabezado X-App-Version.
+          APP_VERSION: ${{ github.sha }}
 
       - name: Publicar
         id: deploy

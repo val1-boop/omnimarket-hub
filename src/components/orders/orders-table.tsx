@@ -297,6 +297,7 @@ export function OrdersTable({ rows, sort, sortHrefs }: OrdersTableProps) {
     </>
   );
 }
+
 type SortableHeaderProps = {
   label: string;
   sort: OrderSort;

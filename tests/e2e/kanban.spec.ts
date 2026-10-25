@@ -55,4 +55,28 @@ test.describe("Tablero (Drag & Drop)", () => {
     await expect(page.getByText(/ahora está en “Preparándose”/)).toBeVisible();
     await expect(moved.getByTestId("saving-skeleton")).toHaveCount(0);
   });
+
+  test("si el servidor falla, la tarjeta regresa a su columna, avisa y no se guarda nada", async ({ page, request }) => {
+    // Simulamos que el guardado falla: las acciones del servidor son POST a la misma página.
+    await page.route("**/kanban", async (route) => {
+      if (route.request().method() === "POST") await route.abort("failed");
+      else await route.continue();
+    });
+    await page.goto("/kanban");
+    const pending = page.getByTestId("kanban-column-PENDING");
+    const processing = page.getByTestId("kanban-column-PROCESSING");
+    const card = pending.locator("[data-testid^=kanban-card-]").first();
+    const cardId = (await card.getAttribute("data-testid"))!;
+    const orderNumber = cardId.replace("kanban-card-", "");
+
+    await dragTo(page, card, processing);
+
+    // Aviso de error y la tarjeta vuelve a "Por preparar" (se deshace el cambio optimista).
+    await expect(page.getByText(`${orderNumber} regresó a donde estaba.`)).toBeVisible();
+    await expect(pending.getByTestId(cardId)).toBeVisible();
+    await expect(processing.getByTestId(cardId)).toHaveCount(0);
+    // En la base no cambió nada.
+    const status = await (await request.get(`/api/test/kanban-status?order=${orderNumber}`)).json();
+    expect(status.order.status).toBe("PENDING");
+  });
 });
