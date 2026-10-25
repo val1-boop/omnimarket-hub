@@ -37,7 +37,10 @@ jobs:
           # Lo que responde Vercel, tal cual (sin variables de entorno ni datos secretos).
           npx vercel@65 project inspect "$name" --token="$VERCEL_TOKEN" 2>&1 | grep -viE "token|secret|env" | tee inspect.txt || true
           npx vercel@65 project inspect "$name" --json --token="$VERCEL_TOKEN" > inspect.json 2> inspect.err || true
-          echo "--- claves del JSON:"; jq -c 'keys' inspect.json 2>/dev/null || { echo "(no es JSON)"; head -c 400 inspect.json; cat inspect.err | head -5; }
+          # Resumen visible en la página de la ejecución (sin datos secretos).
+          enc() { sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"} {print}'; }
+          echo "::notice title=Respuesta de Vercel (texto)::$(head -40 inspect.txt | enc)"
+          echo "::notice title=Respuesta de Vercel (JSON, claves)::$( (jq -c 'keys' inspect.json 2>/dev/null || { echo 'no es JSON:'; head -c 300 inspect.json; echo; head -5 inspect.err; }) | enc)"
           antes=$(jq -r '[.. | objects | select(has("fluid")) | .fluid][0] // "desconocido"' inspect.json 2>/dev/null || echo desconocido)
           [ "$antes" = "desconocido" ] && antes=$(grep -iE "fluid" inspect.txt | head -1 | sed -E 's/^[[:space:]]+//' || true)
           echo "antes=${antes:-desconocido}" >> "$GITHUB_OUTPUT"
