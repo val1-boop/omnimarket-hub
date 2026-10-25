@@ -34,17 +34,23 @@ jobs:
           npx vercel@65 pull --yes --environment=production --token="$VERCEL_TOKEN" > /dev/null
           name=$(jq -r '.projectName' .vercel/project.json)
           echo "name=$name" >> "$GITHUB_OUTPUT"
-          # Lo que responde Vercel, tal cual (sin variables de entorno ni datos secretos).
-          npx vercel@65 project inspect "$name" --token="$VERCEL_TOKEN" 2>&1 | grep -viE "token|secret|env" | tee inspect.txt || true
-          npx vercel@65 project inspect "$name" --json --token="$VERCEL_TOKEN" > inspect.json 2> inspect.err || true
-          # Resumen visible en la página de la ejecución (sin datos secretos).
+          # Se consulta la API de Vercel con el id del proyecto (solo lectura). Con cuenta de equipo
+          # hace falta teamId; con cuenta personal, no: se prueban las dos y se usa la que responda.
+          consulta() { curl -s -H "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID$1"; }
+          for q in "?teamId=$VERCEL_ORG_ID" ""; do
+            consulta "$q" > project.json
+            if jq -e '.id' project.json > /dev/null 2>&1; then echo "query=$q" >> "$GITHUB_OUTPUT"; break; fi
+          done
           enc() { sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"} {print}'; }
-          echo "::notice title=Respuesta de Vercel (texto)::$(head -40 inspect.txt | enc)"
-          echo "::notice title=Respuesta de Vercel (JSON, claves)::$( (jq -c 'keys' inspect.json 2>/dev/null || { echo 'no es JSON:'; head -c 300 inspect.json; echo; head -5 inspect.err; }) | enc)"
-          antes=$(jq -r '[.. | objects | select(has("fluid")) | .fluid][0] // "desconocido"' inspect.json 2>/dev/null || echo desconocido)
-          [ "$antes" = "desconocido" ] && antes=$(grep -iE "fluid" inspect.txt | head -1 | sed -E 's/^[[:space:]]+//' || true)
-          echo "antes=${antes:-desconocido}" >> "$GITHUB_OUTPUT"
-          echo "::notice title=Fluid compute (antes)::${antes:-desconocido}"
+          if jq -e '.id' project.json > /dev/null 2>&1; then
+            antes=$(jq -r '.resourceConfig.fluid // "sin dato"' project.json)
+            echo "::notice title=Ajustes de las funciones (Vercel)::$(jq -c '{resourceConfig, defaultResourceConfig, nodeVersion, framework}' project.json | enc)"
+          else
+            antes="desconocido"
+            echo "::notice title=Respuesta de Vercel::$(jq -c '.error // .' project.json | head -c 300 | enc)"
+          fi
+          echo "antes=$antes" >> "$GITHUB_OUTPUT"
+          echo "::notice title=Fluid compute (antes)::$antes"
 
       - name: Cambiar el ajuste
         if: inputs.accion != 'revisar'
