@@ -3,6 +3,27 @@ import { prisma } from "@/lib/prisma";
 
 export const CUSTOMERS_PAGE_SIZE = 20;
 
+/** Cómo se ordena la lista de clientes. El primero es el de siempre. */
+export const CUSTOMER_SORTS = ["compras", "reciente", "nombre"] as const;
+export type CustomerSort = (typeof CUSTOMER_SORTS)[number];
+
+export const CUSTOMER_SORT_LABELS: Record<CustomerSort, string> = {
+  compras: "Más compras",
+  reciente: "Compra más reciente",
+  nombre: "Nombre (A–Z)",
+};
+
+export function parseCustomerSort(value: string | undefined): CustomerSort {
+  return CUSTOMER_SORTS.find((sort) => sort === value) ?? "compras";
+}
+
+// Solo estas tres formas de ordenar (nunca texto que venga de la dirección).
+const ORDER_BY: Record<CustomerSort, Prisma.Sql> = {
+  compras: Prisma.sql`"spentCents" DESC, c.name ASC, c.id ASC`,
+  reciente: Prisma.sql`"lastOrderAt" DESC NULLS LAST, c.name ASC, c.id ASC`,
+  nombre: Prisma.sql`c.name ASC, c.id ASC`,
+};
+
 export type CustomerRow = {
   id: string;
   name: string;
@@ -15,8 +36,8 @@ export type CustomerRow = {
 };
 
 // Clientes de la tienda con cuántos pedidos tienen y cuánto han comprado.
-// Primero los que más han comprado. La búsqueda es por nombre, ciudad o correo.
-export async function getCustomersPage(storeId: string, query: string, page: number) {
+// Por defecto, primero los que más han comprado. La búsqueda es por nombre, ciudad o correo.
+export async function getCustomersPage(storeId: string, query: string, page: number, sort: CustomerSort = "compras") {
   const search = query.trim();
   // % y _ se buscan como letras normales, no como comodines.
   const like = `%${search.replace(/[\\%_]/g, "\\$&")}%`;
@@ -37,7 +58,7 @@ export async function getCustomersPage(storeId: string, query: string, page: num
       LEFT JOIN "Order" o ON o."customerId" = c.id AND o."storeId" = ${storeId}
       WHERE c."storeId" = ${storeId} ${filter}
       GROUP BY c.id
-      ORDER BY "spentCents" DESC, c.name ASC
+      ORDER BY ${ORDER_BY[sort]}
       LIMIT ${CUSTOMERS_PAGE_SIZE} OFFSET ${(page - 1) * CUSTOMERS_PAGE_SIZE}`,
   ]);
 

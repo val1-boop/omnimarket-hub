@@ -1,3 +1,4 @@
+import { Printer } from "lucide-react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { BackLink } from "@/components/back-link";
@@ -5,6 +6,7 @@ import { OrderStatusControl } from "@/components/orders/order-status-control";
 import { ProductVisual } from "@/components/products/product-visual";
 import { StatusBadge } from "@/components/orders/status-badge";
 import { PageHeader } from "@/components/page-header";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { calculateMargin } from "@/lib/finance";
 import { formatCurrency, formatDate, formatNumber, formatOrderNumber, formatPercent } from "@/lib/format";
@@ -40,7 +42,15 @@ export default async function PedidoPage({ params }: PedidoPageProps) {
       <PageHeader
         eyebrow={`Pedido del ${formatDate(order.createdAt)}`}
         title={formatOrderNumber(order.number)}
-        actions={<StatusBadge status={order.status} />}
+        actions={
+          <>
+            <StatusBadge status={order.status} />
+            <Link href={`/comprobante/${order.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+              <Printer aria-hidden="true" />
+              Comprobante
+            </Link>
+          </>
+        }
       />
 
       <div className="grid gap-6 lg:grid-cols-3">

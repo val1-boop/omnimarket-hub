@@ -1,4 +1,4 @@
-import { buildOrderWhere, ORDERS_PAGE_SIZE, type OrderFilters } from "@/lib/filters";
+import { buildOrderOrderBy, buildOrderWhere, ORDERS_PAGE_SIZE, type OrderFilters } from "@/lib/filters";
 import { prisma } from "@/lib/prisma";
 
 // Todas las consultas reciben la tienda: nunca se mezclan pedidos de tiendas distintas.
@@ -9,7 +9,7 @@ export async function getOrdersPage(filters: OrderFilters, storeId: string) {
     prisma.order.count({ where }),
     prisma.order.findMany({
       where,
-      orderBy: [{ createdAt: "desc" }, { number: "desc" }],
+      orderBy: buildOrderOrderBy(filters.sort),
       skip: (filters.page - 1) * ORDERS_PAGE_SIZE,
       take: ORDERS_PAGE_SIZE,
       select: {

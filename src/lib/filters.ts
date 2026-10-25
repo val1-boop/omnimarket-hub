@@ -4,6 +4,34 @@ import { ORDER_STATUSES } from "@/lib/order-status";
 
 export const ORDERS_PAGE_SIZE = 20;
 
+/** Cómo se ordena la tabla de pedidos. El primero es el de siempre. */
+export const ORDER_SORTS = ["recientes", "antiguos", "mayor", "menor", "cliente"] as const;
+export type OrderSort = (typeof ORDER_SORTS)[number];
+
+export const ORDER_SORT_LABELS: Record<OrderSort, string> = {
+  recientes: "Más recientes",
+  antiguos: "Más antiguos",
+  mayor: "Total más alto",
+  menor: "Total más bajo",
+  cliente: "Cliente (A–Z)",
+};
+
+/** Orden de la base de datos para cada opción. El número de pedido desempata para que las páginas no se mezclen. */
+export function buildOrderOrderBy(sort: OrderSort): Prisma.OrderOrderByWithRelationInput[] {
+  switch (sort) {
+    case "antiguos":
+      return [{ createdAt: "asc" }, { number: "asc" }];
+    case "mayor":
+      return [{ totalCents: "desc" }, { number: "desc" }];
+    case "menor":
+      return [{ totalCents: "asc" }, { number: "asc" }];
+    case "cliente":
+      return [{ customer: { name: "asc" } }, { createdAt: "desc" }, { number: "desc" }];
+    default:
+      return [{ createdAt: "desc" }, { number: "desc" }];
+  }
+}
+
 type SearchParams = Record<string, string | string[] | undefined>;
 
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
@@ -13,16 +41,18 @@ const orderFiltersSchema = z.object({
   q: z.string().trim().max(60).catch(""),
   status: z.enum(ORDER_STATUSES).optional().catch(undefined),
   page: z.coerce.number().int().min(1).catch(1),
+  sort: z.enum(ORDER_SORTS).catch("recientes"),
 });
 
-export type OrderFilters = { q: string; status?: OrderStatus; page: number };
+export type OrderFilters = { q: string; status?: OrderStatus; page: number; sort: OrderSort };
 
-/** Lee los filtros de la dirección: /pedidos?q=ana&status=PENDING&page=2 */
+/** Lee los filtros de la dirección: /pedidos?q=ana&status=PENDING&orden=mayor&page=2 */
 export function parseOrderFilters(params: SearchParams): OrderFilters {
   return orderFiltersSchema.parse({
     q: first(params.q),
     status: first(params.status) || undefined,
     page: first(params.page),
+    sort: first(params.orden),
   });
 }
 
